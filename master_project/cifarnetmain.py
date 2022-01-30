@@ -12,6 +12,7 @@ def main():
     model = LitModelCifarNet(512, transform)
     trainer = Trainer(gpus=1, max_epochs=2)
     trainer.fit(model)
+    print("hi")
 
 
 if __name__ == "__main__":
