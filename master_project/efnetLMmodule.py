@@ -29,7 +29,7 @@ class CNNExpert1(nn.Module):
 
     def forward(self, input):
         hidden_state = self.efficientNet(input)
-        return hidden_state, self.despuespool(hidden_state) #32x53824  and 1600x384
+        return hidden_state, self.efficientNet._fc(hidden_state) #32x53824  and 1600x384
 
 class CNNExpert2(nn.Module):
     def __init__(self, inchannel, numclasses):
