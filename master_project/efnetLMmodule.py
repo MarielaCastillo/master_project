@@ -8,6 +8,8 @@ from efficientnet_pytorch import EfficientNet
 
 from collections import OrderedDict
 
+from master_project.ThermalDataset import ThermalDataset
+
 class CNNExpert1(nn.Module):
     def __init__(self, inchannel, numclasses):
         super(CNNExpert1, self).__init__()
@@ -162,8 +164,12 @@ class LitModelEfficientNet(pl.LightningModule):
 
     def train_dataloader(self):
         #trainset = torchvision.datasets.Kitti(root='./data', train=True, download=True, transform=self.transform)
-        trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
-                                           download=True, transform=self.transform)
+        
+        
+        #trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+        #                                   download=True, transform=self.transform)
+
+        trainset = ThermalDataset("~/Downloads/00")
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
                                             shuffle=True, num_workers=2)
         return trainloader
