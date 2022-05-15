@@ -36,64 +36,36 @@
 ## Simple talker demo that published std_msgs/Strings messages
 ## to the 'chatter' topic
 
-from numpy import array
+#!/usr/bin/env python
+# author : Sumanth Nethi
 import rospy
-from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 import sys
-
-def mover():
-    pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=1000) #move_base #rostopic list
-    rospy.init_node('mover', anonymous=True)
-    rate = rospy.Rate(1) # 10hz
-
-    twist_list = []
-    twist = Twist()
-    twist.linear.x= 13500000
-    twist.linear.y = 0
-    twist.angular.z = 1
-    twist_list.append(twist)
-    '''
-    twist2 = Twist()
-    twist2.linear.x= 100000
-    twist2.linear.y = 0
-    twist2.angular.z = 0.5
-    twist_list.append(twist2)
-
-    twist3 = Twist()
-    twist3.linear.x= 300000
-    twist3.linear.y = 0
-    twist3.angular.z = 1
-    twist_list.append(twist3)
-    
-    twist4 = Twist()
-    twist4.linear.x= 1003000
-    twist4.linear.y = 0
-    twist4.angular.z = .2
-    twist_list.append(twist4)
-
-  
-    twist5 = Twist()
-    twist5.linear.x= 12300231
-    twist5.linear.y =0
-    twist5.angular.z = 1
-    twist_list.append(twist5)
-    '''
-  
-
-
+ 
+ 
+def turtle_circle(radius):
+    rospy.init_node('turtlesim', anonymous=True)
+    pub = rospy.Publisher('/turtle1/cmd_vel',
+                          Twist, queue_size=10)
+    rate = rospy.Rate(10)
+    vel = Twist()
     while not rospy.is_shutdown():
-        for item in twist_list:
-            rospy.loginfo(item)
-            pub.publish(item)
-        #rate.sleep() #cambiar a delay, para que se manden a diferentes tiempos
-
-
-
-        #rate.sleep()
-
+        vel.linear.x = radius
+        vel.linear.y = 0
+        vel.linear.z = 0
+        vel.angular.x = 0
+        vel.angular.y = 0
+        vel.angular.z = 1
+        rospy.loginfo("asdf = %f",
+                      radius)
+        pub.publish(vel)
+        rate.sleep()
+ 
+ 
 if __name__ == '__main__':
     try:
-        mover()
+        hello_str = "hello world %s" % rospy.get_time()
+        rospy.loginfo(hello_str)
+        turtle_circle(float(rospy.get_time()))
     except rospy.ROSInterruptException:
         pass
