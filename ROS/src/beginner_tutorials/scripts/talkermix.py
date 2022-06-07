@@ -37,17 +37,53 @@
 ## to the 'chatter' topic
 
 import rospy
-from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
+import os
+
 
 def talker():
-    pub = rospy.Publisher('chatter', String, queue_size=10)
+    pub = rospy.Publisher('img', Image, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
-        hello_str = "hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        pub.publish(hello_str)
-        rate.sleep()
+
+        # Create the cv_bridge object
+        bridge = CvBridge()
+
+        folder_path_rgb = '/home/miw/Documents/MasterProject/KITTI/rgb/'
+        folder_path_thermo = '/home/miw/Documents/MasterProject/KITTI/rgb/'
+        images_rgb = []
+        images_thermo = []
+
+        
+
+        for filename in os.listdir(folder_path_rgb):
+            img = cv2.imread(os.path.join(folder_path_rgb,filename))
+            if img is not None:
+                images_rgb.append(img)
+        
+        for filename in os.listdir(folder_path_thermo):
+            img = cv2.imread(os.path.join(folder_path_thermo,filename))
+            if img is not None:
+                images_thermo.append(img)
+
+    
+        try:
+            for img_rgb, img_thermo in zip(images_rgb, images_thermo):
+                rospy.loginfo(img_rgb)
+                rospy.loginfo(img_thermo)
+                msg_rgb = bridge.cv2_to_imgmsg(img_rgb, "bgr8")
+                msg_thermo = bridge.cv2_to_imgmsg(img_thermo, "bgr8")
+                
+                pub.publish(msg_thermo)
+                pub.publish(msg_rgb)
+
+            rate.sleep() 
+
+        except CvBridgeError as e:
+            print(e) 
 
 if __name__ == '__main__':
     try:

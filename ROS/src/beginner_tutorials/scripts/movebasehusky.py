@@ -45,52 +45,41 @@ import sys
 def mover():
     pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=1000) #move_base #rostopic list
     rospy.init_node('mover', anonymous=True)
-    rate = rospy.Rate(1) # 10hz
+    rate = rospy.Rate(10) # 10hz
 
-    twist_list = []
-    twist = Twist()
-    twist.linear.x= 13500000
-    twist.linear.y = 0
-    twist.angular.z = 1
-    twist_list.append(twist)
-    '''
-    twist2 = Twist()
-    twist2.linear.x= 100000
-    twist2.linear.y = 0
-    twist2.angular.z = 0.5
-    twist_list.append(twist2)
+    vel = Twist()
+    i = 0
+    xi = 100000
+    angz = 1
 
-    twist3 = Twist()
-    twist3.linear.x= 300000
-    twist3.linear.y = 0
-    twist3.angular.z = 1
-    twist_list.append(twist3)
     
-    twist4 = Twist()
-    twist4.linear.x= 1003000
-    twist4.linear.y = 0
-    twist4.angular.z = .2
-    twist_list.append(twist4)
-
-  
-    twist5 = Twist()
-    twist5.linear.x= 12300231
-    twist5.linear.y =0
-    twist5.angular.z = 1
-    twist_list.append(twist5)
-    '''
-  
-
-
     while not rospy.is_shutdown():
-        for item in twist_list:
-            rospy.loginfo(item)
-            pub.publish(item)
-        #rate.sleep() #cambiar a delay, para que se manden a diferentes tiempos
+        hello_str = "hello world %s" % rospy.get_time()
+        time = rospy.get_time()
+        rospy.loginfo(hello_str)
+        
+        if i % 36 == 0:
+            angz = angz * (-1)
 
 
+        vel.linear.x = xi #(time-1652363160)/10 #revisar formmula
+        vel.linear.y = 0
+        vel.linear.z = 0
+        vel.angular.x = 0
+        vel.angular.y = 0
+        vel.angular.z = angz   #(time-1652363160)/100 #revisar formmula #1
+        #only change angular.z
+        #only change linear.x
+        i = i + 1
+        
+        rospy.loginfo("x = %f", vel.linear.x)
+        rospy.loginfo("z = %f", vel.angular.z)
 
-        #rate.sleep()
+        rospy.loginfo("i = %f", i)
+        rospy.loginfo("angz = %f", angz)
+
+        pub.publish(vel)
+        rate.sleep()
 
 if __name__ == '__main__':
     try:

@@ -36,36 +36,61 @@
 ## Simple talker demo that published std_msgs/Strings messages
 ## to the 'chatter' topic
 
-#!/usr/bin/env python
-# author : Sumanth Nethi
+from cmath import sin
+from numpy import array
 import rospy
+from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 import sys
- 
- 
-def turtle_circle(radius):
+
+def turtle_circle():
     rospy.init_node('turtlesim', anonymous=True)
     pub = rospy.Publisher('/turtle1/cmd_vel',
                           Twist, queue_size=10)
     rate = rospy.Rate(10)
     vel = Twist()
+    i = 0
+    xi = 2
+    angz = 1
+
+    
     while not rospy.is_shutdown():
-        vel.linear.x = radius
+        hello_str = "hello world %s" % rospy.get_time()
+        time = rospy.get_time()
+        rospy.loginfo(hello_str)
+        
+        if i % 36*xi == 0:
+            angz = angz * (-1)
+
+
+        vel.linear.x = xi #(time-1652363160)/10 #revisar formmula
         vel.linear.y = 0
         vel.linear.z = 0
         vel.angular.x = 0
         vel.angular.y = 0
-        vel.angular.z = 1
-        rospy.loginfo("asdf = %f",
-                      radius)
+        vel.angular.z = angz   #(time-1652363160)/100 #revisar formmula #1
+        #only change angular.z
+        #only change linear.x
+        i = i + 1
+        
+        rospy.loginfo("x = %f", vel.linear.x)
+        rospy.loginfo("z = %f", vel.angular.z)
+
+        rospy.loginfo("i = %f", i)
+        rospy.loginfo("angz = %f", angz)
+
         pub.publish(vel)
         rate.sleep()
- 
- 
+
+#def mover():
+    #pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=10) #move_base #rostopic list
+    #rospy.init_node('mover', anonymous=True)
+
+
+
 if __name__ == '__main__':
     try:
-        hello_str = "hello world %s" % rospy.get_time()
-        rospy.loginfo(hello_str)
-        turtle_circle(float(rospy.get_time()))
+        turtle_circle()
+        #mover()
     except rospy.ROSInterruptException:
         pass
