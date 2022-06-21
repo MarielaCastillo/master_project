@@ -36,20 +36,21 @@
 ## Simple talker demo that published std_msgs/Strings messages
 ## to the 'chatter' topic
 
+from cmath import sin
 from numpy import array
 import rospy
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 import sys
 
-def mover():
-    pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=1000) #move_base #rostopic list
-    rospy.init_node('mover', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
-
+def turtle_circle():
+    rospy.init_node('turtlesim', anonymous=True)
+    pub = rospy.Publisher('/turtle1/cmd_vel',
+                          Twist, queue_size=10)
+    rate = rospy.Rate(10)
     vel = Twist()
     i = 0
-    xi = 100000
+    xi = 2
     angz = 1
 
     
@@ -58,7 +59,7 @@ def mover():
         time = rospy.get_time()
         rospy.loginfo(hello_str)
         
-        if i % 36 == 0:
+        if i % 36*xi == 0:
             angz = angz * (-1)
 
 
@@ -81,8 +82,15 @@ def mover():
         pub.publish(vel)
         rate.sleep()
 
+#def mover():
+    #pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=10) #move_base #rostopic list
+    #rospy.init_node('mover', anonymous=True)
+
+
+
 if __name__ == '__main__':
     try:
-        mover()
+        turtle_circle()
+        #mover()
     except rospy.ROSInterruptException:
         pass

@@ -52,11 +52,14 @@ def talker():
         
         # rospy.loginfo(hello_str)
         # pub.publish(hello_str)
-        rate.sleep()
+        
+        #rate.sleep()
+        
         # path
         
         #path = '/home/miw/Downloads/00/fl_ir_aligned/fl_ir_aligned_1570722156_952177040.png'
-        path = '/home/miw/Downloads/00/fl_rgb/fl_rgb_1570722156_952177040.png'
+        #path = '/home/miw/Downloads/00/fl_rgb/fl_rgb_1570722156_952177040.png'
+        path = '/home/miw/Documents/MasterProject/KITTI/rgb/0000000000.png'
         
         # Using cv2.imread() method
         img = cv2.imread(path, cv2.IMREAD_COLOR) ### para monocromaatico IMREAD_ no color
@@ -66,7 +69,8 @@ def talker():
 
 
         #folder_path = '/home/miw/Downloads/00/Test/'
-        folder_path = '/home/miw/Downloads/00/fl_rgb/'
+        #folder_path = '/home/miw/Downloads/00/fl_rgb/'
+        folder_path = '/home/miw/Documents/MasterProject/KITTI/rgb/'
         images = []
         for filename in os.listdir(folder_path):
             img = cv2.imread(os.path.join(folder_path,filename))
@@ -79,13 +83,15 @@ def talker():
                 rospy.loginfo(item)
                 msg = bridge.cv2_to_imgmsg(item, "bgr8")
                 pub.publish(msg)
-                rate.sleep()  ###### todaviia no sirve kahsfkjahsdjflahdsfkh
+            rate.sleep() 
 
         except CvBridgeError as e:
             print(e) 
 
 if __name__ == '__main__':
     try:
-        talker()
+        for i in range(3):
+            print("ii ", i)
+            talker()
     except rospy.ROSInterruptException:
         pass

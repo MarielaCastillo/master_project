@@ -41,8 +41,15 @@ import cv2
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+from sensor_msgs.msg import PointCloud2
 
 def callback_img(imgmsg): #mensaje
+
+    ### agregar preprocesamiento/1. redimensionar
+    #para entrenar, reduccion de dimensiones/canales (de 3 a 1)
+    #forma simple (r+g+b)/3
+
+
     bridge = CvBridge()
     img = bridge.imgmsg_to_cv2(imgmsg) #imagen
     rospy.loginfo(type(img))
@@ -53,8 +60,16 @@ def callback_img(imgmsg): #mensaje
 def callback2(data):
     rospy.loginfo(rospy.get_caller_id() + 'asdf %s', data.data)
 
-def callback3(data):
-    rospy.loginfo(rospy.get_caller_id() + 'qwer3 %s', data.data)
+def callback3(imgmsg):
+
+    ### agregar preprocesamiento/1. redimensionar
+    
+    bridge = CvBridge()
+    img = bridge.imgmsg_to_cv2(imgmsg) #imagen
+    rospy.loginfo(type(img))
+    cv2.imshow("nombre", img)
+    cv2.waitKey(1)
+    # rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
 
 def callback4(data):
     rospy.loginfo(rospy.get_caller_id() + 'asdf rewq4 %s', data.data)
@@ -70,7 +85,7 @@ def listener():
 
     rospy.Subscriber('img', Image, callback_img)
     rospy.Subscriber('chatter2', String, callback2)
-    rospy.Subscriber('chatter3', String, callback3)
+    rospy.Subscriber('chattedatar3', Image, callback3)
     rospy.Subscriber('chatter4', String, callback4)
 
     # spin() simply keeps python from exiting until this node is stopped

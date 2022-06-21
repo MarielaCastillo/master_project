@@ -40,20 +40,9 @@ import rospy
 from std_msgs.msg import String
 import os
 import numpy as np
-import pandas as pd
 
-def read_text_file(file_path):
-    print("file_path:", file_path)
-    print(type(file_path))
-    df = pd.read_csv(file_path, sep=" ", header=None)
-    
 
-    df = df.drop(df.columns[[3]], axis=1)
-    df.columns.name = None
-    df.reset_index(drop=True, inplace=True)
-    return df
-
-def read_text_file2(file_path): ##Correct but takes time
+def read_text_file(file_path): ##Correct but takes time
     #values_pointcloud = []
     values_pointcloud = np.zeros((1,3))
     with open(file_path, 'r') as f:
@@ -97,9 +86,14 @@ def talker(point_cloud):
 if __name__ == '__main__':
     try:
         #while not rospy.is_shutdown():
+            for i in range(5):
+                print(i)
+                #talker()
+
+            print("asdf1")
             folder_path = '/home/miw/Documents/MasterProject/KITTI/pointcloud'
 
-
+            print("asdf2")
                 # iterate through all file
             for file in sorted(os.listdir(folder_path)):
                 print("asdf file", file)
@@ -109,9 +103,68 @@ if __name__ == '__main__':
                     file_path = f"{folder_path}/{file}"
 
                     point_cloud = read_text_file(file_path)
+                    #print("point_cloud ", point_cloud)
 
+                    #np.array2string(point_cloud, precision=2, separator=',', suppress_small=True)
+
+                    #print("x2 ",x2)
+                    #print("x3 ",x3)
                     talker(point_cloud)
                     print()
 
     except rospy.ROSInterruptException:
         pass
+
+
+
+
+
+''' 
+import rospy
+from std_msgs.msg import String
+
+import std_msgs.msg
+import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs.msg import PointCloud2
+
+
+def talker(): #what is pc? what is obj?
+#def talker(): 
+    #publish_pc2
+    """Publisher of PointCloud data"""
+    pub = rospy.Publisher("chatter2", PointCloud2, queue_size=1000000)
+    rospy.init_node("pc2_publisher") #, anonymous=True)
+    header = std_msgs.msg.Header()
+    header.stamp = rospy.Time.now()
+    header.frame_id = "velodyne" #agregar +id 
+    points = pc2.create_cloud_xyz32(header, pc[:, :3])
+
+
+    r = rospy.Rate(0.1)
+    while not rospy.is_shutdown():
+        hello_str = "asdsgfre %s" % rospy.get_time()
+        rospy.loginfo(hello_str)
+        pub.publish(points)
+        r.sleep()
+
+
+
+    def read_text_file(file_path):
+    with open(file_path, 'r') as f:
+        print(file_path)
+        #print(f.read())
+        file = f.read()
+        values = file.split(' ')
+        return float(values[0]), float(values[1]), float(values[5])
+
+
+if __name__ == '__main__':
+    try:
+        talker()
+        #for
+        #    pc = 0000.txt columna 1, 2, 3 #lista iterable no matriz!
+        #    talker(pc)
+            
+    except rospy.ROSInterruptException:
+        pass
+'''

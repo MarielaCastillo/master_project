@@ -36,53 +36,57 @@
 ## Simple talker demo that published std_msgs/Strings messages
 ## to the 'chatter' topic
 
-from numpy import array
 import rospy
-from std_msgs.msg import String
-from geometry_msgs.msg import Twist
-import sys
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
+import os
 
-def mover():
-    pub = rospy.Publisher('husky_velocity_controller/cmd_vel', Twist, queue_size=1000) #move_base #rostopic list
-    rospy.init_node('mover', anonymous=True)
+
+def talker():
+    pub = rospy.Publisher('img', Image, queue_size=10)
+    rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
+    while not rospy.is_shutdown():
 
-    vel = Twist()
-    i = 0
-    xi = 100000
-    angz = 1
+        # Create the cv_bridge object
+        bridge = CvBridge()
+
+        folder_path_rgb = '/home/miw/Documents/MasterProject/KITTI/rgb/'
+        folder_path_thermo = '/home/miw/Documents/MasterProject/KITTI/rgb/'
+        images_rgb = []
+        images_thermo = []
+
+        
+
+        for filename in os.listdir(folder_path_rgb):
+            img = cv2.imread(os.path.join(folder_path_rgb,filename))
+            if img is not None:
+                images_rgb.append(img)
+        
+        for filename in os.listdir(folder_path_thermo):
+            img = cv2.imread(os.path.join(folder_path_thermo,filename))
+            if img is not None:
+                images_thermo.append(img)
 
     
-    while not rospy.is_shutdown():
-        hello_str = "hello world %s" % rospy.get_time()
-        time = rospy.get_time()
-        rospy.loginfo(hello_str)
-        
-        if i % 36 == 0:
-            angz = angz * (-1)
+        try:
+            for img_rgb, img_thermo in zip(images_rgb, images_thermo):
+                rospy.loginfo(img_rgb)
+                rospy.loginfo(img_thermo)
+                msg_rgb = bridge.cv2_to_imgmsg(img_rgb, "bgr8")
+                msg_thermo = bridge.cv2_to_imgmsg(img_thermo, "bgr8")
+                
+                pub.publish(msg_thermo)
+                pub.publish(msg_rgb)
 
+            rate.sleep() 
 
-        vel.linear.x = xi #(time-1652363160)/10 #revisar formmula
-        vel.linear.y = 0
-        vel.linear.z = 0
-        vel.angular.x = 0
-        vel.angular.y = 0
-        vel.angular.z = angz   #(time-1652363160)/100 #revisar formmula #1
-        #only change angular.z
-        #only change linear.x
-        i = i + 1
-        
-        rospy.loginfo("x = %f", vel.linear.x)
-        rospy.loginfo("z = %f", vel.angular.z)
-
-        rospy.loginfo("i = %f", i)
-        rospy.loginfo("angz = %f", angz)
-
-        pub.publish(vel)
-        rate.sleep()
+        except CvBridgeError as e:
+            print(e) 
 
 if __name__ == '__main__':
     try:
-        mover()
+        talker()
     except rospy.ROSInterruptException:
         pass
