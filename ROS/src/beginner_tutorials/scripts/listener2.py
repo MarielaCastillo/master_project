@@ -1,27 +1,30 @@
 #!/usr/bin/env python
 
+# Example on how to recover data from Float64MultiArray msg
+# have to be size recovered as they were first sent as a flat vector
+
 import rospy
 from std_msgs.msg import Float64MultiArray
-from beginner_tutorials.msg import MyArray
+import numpy as np
 
+def callback(data):
+    #Recover data, recreate 2Dimensions Matrix of size: length x height x width
+    received_2D_array = data.data
+    rospy.loginfo("This is the 2D vector: ")
+    #rospy.loginfo(received_2D_array)
 
-from std_msgs.msg import String
+    rospy.loginfo("And here, reconstructed Matrix: ")
+    length = data.layout.dim[0].size
+    height = data.layout.dim[1].size
+    reconstructed_2D_array = np.asarray(received_2D_array).reshape((length,height))
+    #rospy.loginfo(reconstructed_2D_array)
+    rospy.loginfo("yay!")
 
-def callback2(data):
-    #rospy.loginfo(rospy.get_caller_id() + 'asdf %s', data.data)
-    print("hi4")
-    rospy.loginfo(type(data))
-    rospy.loginfo(data)
+def subscriber():
+    rospy.Subscriber('topic2D', Float64MultiArray, callback)
 
-
-def listener2():
-    print("hi1")
-    rospy.init_node('listener', anonymous=True)
-    print("hi2")
-    rospy.Subscriber('chatter2', MyArray, callback2)
-    print("hi3")
-
+    rospy.init_node('subscriberToArray', anonymous=True)
     rospy.spin()
 
 if __name__ == '__main__':
-    listener2()
+    subscriber()
