@@ -5,16 +5,25 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 import pathlib
+from pathlib import Path
 
 class ThermalDataset(Dataset):
     def __init__(self, dataset_url, transform = False) -> None:
         super().__init__()
         self.dataset_url = dataset_url
 
+        self.transform = transform
         
 
 
-        self.transform = transform
+
+        files = [path.suffix for path in docs.iterdir() if path.is_file() and path.suffix]
+        data = collections.Counter(files)
+
+        print(data)
+
+        for key, val in data.items(): 
+            print(f'{key}: {val}')
 
 
     def __len__(self):
