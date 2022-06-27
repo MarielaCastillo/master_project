@@ -28,17 +28,27 @@ class MultiModalDataset(Dataset):
         return len(self.annotations)
 
     def __getitem__(self, index): ##collate #should it be reading one at a time???
-        img_path = os.path.join(self.root_dir, f'{self.annotations.iloc[index, 1]}_rgb.png')
+        img_path = os.path.join(self.root_dir, f'{self.annotations.iloc[index, 0]}_rgb.png')
         imagergb = io.imread(img_path)
 
         img_path = os.path.join(self.root_dir, f'{self.annotations.iloc[index, 0]}.png')
         imagedepth = io.imread(img_path)
-        
-        #img_path = os.path.join(self.root_dir, self.annotations.iloc[index, 2])
-        #lidar = pending
+
+        pointcloud_path = os.path.join(self.root_dir, f'{self.annotations.iloc[index, 0]}.txt')
+        #print("pointcloud_path ", pointcloud_path)
+
+        df = pd.read_csv(pointcloud_path, sep=" ", header=None)
+        dflidar = df.drop(df.columns[[3]], axis=1)
+        torch_tensor = torch.tensor(dflidar.values)
+        #RuntimeError: stack expects each tensor to be equal size, but got [122455, 3] at entry 0 and [121266, 3] at entry 1
+        #collate
+
+        y_label = torch.tensor([float(self.annotations.iloc[index, 1]),float(self.annotations.iloc[index, 2]),float(self.annotations.iloc[index, 3])])
+        #print("shape ",y_label)
 
 
-        y_label = torch.tensor(int(self.annotations.iloc[index, 4]))
+        #labeltest = torch.full((1, 3), 3.141592)
+
 
         if self.transform:
             imagergb = self.transform(imagergb)
@@ -46,8 +56,8 @@ class MultiModalDataset(Dataset):
 
 
         #return [imagergb, y_label]
-
         return [imagergb, imagedepth, y_label]
+        #return [imagergb, imagedepth, torch_tensor, y_label]
 
 
 '''
@@ -216,7 +226,7 @@ class LitModelEfficientNet(pl.LightningModule):
             ('softmax', nn.Softmax(dim=1))
         ]))
 
-    def forward(self, x1, x2, x3, x4):
+    def forward(self, x1, x2, x3, x4): ### here1
         hidden_statergb, outrgb = self.cnnexpertRGB(x1)
         hidden_statedepth, outdepth = self.cnnexpertDepth(x2)
         hidden_stateLidar, outLidar = self.cnnexpertLidar(x3)
@@ -224,7 +234,6 @@ class LitModelEfficientNet(pl.LightningModule):
 
         #target = resultado de la funcion GPS a vector de posicion ver liinea 199
         #loss MSE en vez de Cross Entropy liinea 127
-
         outconcatgating = torch.cat([hidden_statergb, hidden_statedepth, hidden_stateLidar, hidden_stateThermo], dim = -1)
         outconcatexpertclassifier = torch.stack([outrgb, outdepth, outLidar, outThermo], dim = -1)
         gating = self.gatingnetwork(outconcatgating)
@@ -261,6 +270,9 @@ class LitModelEfficientNet(pl.LightningModule):
         #                                      download=True, transform=self.transform)
         testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                          download=True, transform=self.transform)
+
+
+        #test setdatoenvivo = # no en train, pero en vivo.  1 rgb 1bw 1 point cloud
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
                                             shuffle=False, num_workers=10) #2
         return testloader

@@ -43,7 +43,7 @@ def conversion2(lat, lon):
 
 def read_text_file(file_path):
     with open(file_path, 'r') as f:
-        print(file_path)
+        #print(file_path)
         #print(f.read())
         file = f.read()
         values = file.split(' ')
@@ -94,14 +94,16 @@ def main():
             lat, lon, angle = read_text_file(file_path)
             #print(lat, lon, angle)
 
-            latarray.append(lat)
-            lonarray.append(lon)
+            print(lat, lon, angle)
 
-        xyangle1 = conversionLatLongToXYAngle(lat, lon, angle) #print
-        xyangle2 = conversion2(lat, lon) 
+            #latarray.append(lat)
+            #lonarray.append(lon)
 
-        print(xyangle1)
-    print(math.pi/180)
+        #xyangle1 = conversionLatLongToXYAngle(lat, lon, angle) #print
+        #xyangle2 = conversion2(lat, lon) 
+
+        #print(xyangle1)
+    #print(math.pi/180)
 
     
 

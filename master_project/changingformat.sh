@@ -1,0 +1,1 @@
+for i in *.png; do mv "$i" "${i%.*}_rgb.png"; done
