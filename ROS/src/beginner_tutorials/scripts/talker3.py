@@ -43,39 +43,19 @@ import cv2
 import os
 
 
-def talker():
-    pub = rospy.Publisher('img', Image, queue_size=10)
+def talker3():
+    pub = rospy.Publisher('chatter3', Image, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
-        # hello_str = "hello world %s" % rospy.get_time()
-        
-        # rospy.loginfo(hello_str)
-        # pub.publish(hello_str)
-        
-        #rate.sleep()
-        
-        # path
-        
-        #path = '/home/miw/Downloads/00/fl_ir_aligned/fl_ir_aligned_1570722156_952177040.png'
-        path = '/home/miw/Downloads/00/fl_rgb/fl_rgb_1570722156_952177040.png'
-        path = '/home/miw/Documents/MasterProject/KITTI/rgb/0000000000.png'
-        
-        # Using cv2.imread() method
-        img = cv2.imread(path, cv2.IMREAD_COLOR) ### para monocromaatico IMREAD_ no color
-
-        # Create the cv_bridge object
         bridge = CvBridge()
 
-
-        #folder_path = '/home/miw/Downloads/00/Test/'
-        #folder_path = '/home/miw/Downloads/00/fl_rgb/'
-        folder_path = '/home/miw/Documents/MasterProject/KITTI/rgb/'
+        folder_path = '/home/miw/Documents/MasterProject/KITTI/blackandwhite/'
         images = []
         for filename in os.listdir(folder_path):
             img = cv2.imread(os.path.join(folder_path,filename))
             if img is not None:
-                images.append(img) ### revisar kaljhdfjkh
+                images.append(img)
 
     
         try:
@@ -90,7 +70,7 @@ def talker():
 
 if __name__ == '__main__':
     try:
-        talker()
+        talker3()
     except rospy.ROSInterruptException:
         pass
 

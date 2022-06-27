@@ -69,6 +69,9 @@ def callback2(data):
     length = data.layout.dim[0].size
     height = data.layout.dim[1].size
     reconstructed_2D_array = np.asarray(received_2D_array).reshape((length,height))
+    
+    rospy.loginfo(reconstructed_2D_array.shape)
+    rospy.loginfo(reconstructed_2D_array[:5][:])
     rospy.loginfo("yay!")
 
 def callback3(imgmsg):
