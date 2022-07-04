@@ -51,21 +51,13 @@ class LitModelCifarNet(pl.LightningModule):
         self.criterion = nn.CrossEntropyLoss()
 
         self.cnnexpertrgb = CNNExpert(3, 2)
-        self.cnnexpertdepth = CNNExpert(1, 2) #hacer diferentes modelos para cada uno
+        self.cnnexpertdepth = CNNExpert(1, 2) 
         self.cnnexpertof = CNNExpert(2, 2)
 
         self.gatingnetwork = nn.Sequential(OrderedDict([
             ('fc1', nn.Linear(64*3, 64)), #output 64
             ('relu3', nn.ReLU(True)),
             ('fc2', nn.Linear(64, 3)),   #output 2
-            ('softmax', nn.Softmax(dim=1))
-        ]))
-
-        self.gatingnetworkGoogLeNetxxs = nn.Sequential(OrderedDict([
-            ('conv2', nn.Conv2d(64, 128, kernel_size=3)), #output 128, kernel 3
-            ('fc1', nn.Linear(128, 128)), #size 128
-            ('relu3', nn.ReLU(True)),
-            ('fc2', nn.Linear(128, 3)),   #size 2
             ('softmax', nn.Softmax(dim=1))
         ]))
 
@@ -100,7 +92,7 @@ class LitModelCifarNet(pl.LightningModule):
         trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                            download=True, transform=self.transform)
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=2)
+                                            shuffle=True, num_workers=12) #2
         return trainloader
 
     def test_dataloader(self):
@@ -109,7 +101,7 @@ class LitModelCifarNet(pl.LightningModule):
         testset = torchvision.datasets.CIFAR10(root='./data', train=False,
                                          download=True, transform=self.transform)
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                            shuffle=False, num_workers=2)
+                                            shuffle=False, num_workers=12) #2
         return testloader
 
     ### optimizers and schedulers
@@ -122,10 +114,16 @@ class LitModelCifarNet(pl.LightningModule):
         #optimizer.zero_grad()
         batch_size = 8
         w, h = 128, 128
-        labels = torch.randint(0, 2, [batch_size]).cuda() #high exclusive low inclusive
-        inputrgb = torch.rand(batch_size, 3, w, h).cuda()
-        inputdepth = torch.rand(batch_size, 1, w, h).cuda()
-        inputof = torch.rand(batch_size, 2, w, h).cuda()
+        #labels = torch.randint(0, 2, [batch_size]).cuda() #high exclusive low inclusive
+        #inputrgb = torch.rand(batch_size, 3, w, h).cuda()
+        #inputdepth = torch.rand(batch_size, 1, w, h).cuda()
+        #inputof = torch.rand(batch_size, 2, w, h).cuda()
+
+        labels = torch.randint(0, 2, [batch_size]) #high exclusive low inclusive
+        inputrgb = torch.rand(batch_size, 3, w, h)
+        inputdepth = torch.rand(batch_size, 1, w, h)
+        inputof = torch.rand(batch_size, 2, w, h)
+
         outputs = self(inputrgb, inputdepth, inputof) #forward(x1, x2, x3)
         loss = self.criterion(outputs, labels)
         #loss.backward()
