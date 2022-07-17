@@ -8,8 +8,11 @@ import torchvision.transforms as transforms
 from efficientnet_pytorch import EfficientNet
 from torch.utils.data import Dataset
 from collections import OrderedDict
+from efnetLMmoduleExpert1SS import MultiModalDataset
 
 import segmentation_models_pytorch as smp
+from segmentation_models_pytorch.unet.decoder import UnetDecoder
+from segmentation_models_pytorch.base.heads import SegmentationHead
 
 import pandas as pd
 import os
@@ -35,139 +38,76 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 #1570729614_4316866600
 #1570729614_4316866600
 
-class MultiModalDataset(Dataset):
-    def __init__(self, rgb_path, thermo_path, label_path, transform=None):
-        self.rgb_path = rgb_path
-        self.thermo_path = thermo_path
-        self.label_path = label_path
-        self.rgb_filepaths = [f for f in sorted(os.listdir(rgb_path))]
-        self.thermo_filepaths = [f for f in sorted(os.listdir(thermo_path))]
-        self.label_filepaths = [f for f in sorted(os.listdir(label_path))]
-        self.transform = transform
-
-    def __getitem__(self, idx):
-        img_rgb = io.imread(self.rgb_path+'/'+self.rgb_filepaths[idx])
-        img_thermo = io.imread(self.thermo_path+'/'+self.thermo_filepaths[idx])
-        label = io.imread(self.label_path+'/'+self.label_filepaths[idx])
-
-        img_thermo = img_thermo.astype(float)
-
-        if self.transform:
-            img_thermo = self.transform(img_thermo)
-            img_rgb = self.transform(img_rgb)
-            label = self.transform(label)
-        
-            
-        #return img_rgb, img_thermo, label
-        return img_rgb, label
-
-    def __len__(self):
-        return len(self.rgb_filepaths)
-
-class UNetExpert1(nn.Module):
-    def __init__(self, inchannels, numclasses):
-        super().__init__()
-        self.model = smp.Unet('efficientnet-b4', in_channels=inchannels, classes=numclasses, activation='softmax')
-    
-    def forward(self, input):
-        hidden_state = self.model.encoder(input)
-        decoder_output = self.model.decoder(*hidden_state)
-
-        masks = self.model.segmentation_head(decoder_output)
-        '''
-        if self.model.classification_head is not None:
-            labels = self.model.classification_head(hidden_state[-1])
-            return hidden_state, masks, labels
-        '''
-        
-        return hidden_state, masks
-       
-
-
-class CNNExpert1(nn.Module):
-    def __init__(self, inchannel, numclasses):
-        super().__init__()
-        self.efficient_net = EfficientNet.from_pretrained('efficientnet-b4', in_channels=inchannel)
-        self.disable_gradients(self.efficient_net)
-        self.e2h = nn.Linear(1792, 64)
-        self.hidden_dim = 64
-        self.fc = nn.Sequential(
-            nn.Linear(in_features=64, out_features=256),
-            nn.Linear(in_features=256, out_features=64),
-            nn.ReLU(),
-            nn.Linear(in_features=64, out_features=numclasses)
-        )
-
-    def disable_gradients(self, model):
-        # update the pretrained model
-        for param in model.parameters():
-            param.requires_grad = False
-
-    def forward(self, input): ### 8, 3, 128, 128
-        features = self.efficient_net.extract_features(input)
-        hidden_state = self.efficient_net._avg_pooling(features)
-        hidden_state = hidden_state.flatten(start_dim=1)
-        hidden_state = self.e2h(hidden_state)
-        return hidden_state, self.fc(hidden_state)
-
 ####Model
-class LitModelEfficientNet(pl.LightningModule):
+class LitModelEfficientNetFull(pl.LightningModule):
     #https://github.com/gthparch/edgeBench/blob/master/pytorch/models/cifarnet.py#L23
     #def __init__(self, batch_size, transform, model1, model2):
-    def __init__(self, batch_size, transform, model1):
-        super(LitModelEfficientNet, self).__init__()
+    def __init__(self, batch_size, transform, model1, model2):
+        super(LitModelEfficientNetFull, self).__init__()
         self.batch_size = batch_size
         self.transform = transform
 
         self.criterion = nn.CrossEntropyLoss()
         #self.criterion = nn.MSELoss()
 
-        #self.cnnexpertRGB = model1
-        self.cnnexpertRGB = UNetExpert1(inchannels=3, numclasses=3)
+        self.cnnexpertRGB = model1
+        #self.cnnexpertRGB = UNetExpert1(inchannels=3, numclasses=3)
         #self.cnnexpertDepth = model2
         #self.cnnexpertRGB = CNNExpert1(3, 3) ### model_weights[key.replace("auto_encoder.", "")] = model_weights.pop(key)
-        self.cnnexpertDepth = CNNExpert1(1, 3) 
-        self.cnnexpertLidar = CNNExpert1(2, 3)
-        self.cnnexpertThermo = CNNExpert1(1, 3)
+        self.cnnexpertDepth = model2
+        #self.cnnexpertLidar = CNNExpert1(2, 3)
+        #self.cnnexpertThermo = CNNExpert1(1, 3)
         #hidden_concat_dim = self.cnnexpertRGB.hidden_dim + self.cnnexpertDepth.hidden_dim + self.cnnexpertLidar.hidden_dim + self.cnnexpertThermo.hidden_dim
-        hidden_concat_dim = self.cnnexpertDepth.hidden_dim + self.cnnexpertLidar.hidden_dim + self.cnnexpertThermo.hidden_dim ## definir este numero con base en el encoder
+        
+        #hidden_concat_dim = self.cnnexpertDepth.hidden_dim + self.cnnexpertLidar.hidden_dim + self.cnnexpertThermo.hidden_dim ## definir este numero con base en el encoder
 
-        self.gatingnetwork = nn.Sequential(OrderedDict([
-            ('fc1', nn.Linear(hidden_concat_dim, 64)), #output 64 
-            ('relu3', nn.ReLU()),
-            ('fc2', nn.Linear(64, 2)),   #output 2. Cambiar el 4 al tamanio
-            ('softmax', nn.Softmax(dim=1))  ################### probabilidad. Que no rebase 1
-        ]))
+        encoder_channels = list(self.cnnexpertRGB.model.encoder.out_channels)
+        encoder_channels = [ 2 * a  for a in encoder_channels]
+        decoder_channels = (256, 128, 64, 32, 16)
+        self.decoder = UnetDecoder(
+                encoder_channels=encoder_channels,
+                decoder_channels=decoder_channels,
+                n_blocks=5,
+                use_batchnorm= True,
+                center= False,
+                attention_type= None)
 
-    def forward(self, x1, x2, x3, x4):
+        self.head = SegmentationHead(
+                in_channels=decoder_channels[-1],
+                out_channels=2,
+                kernel_size=3,
+            )
+
+    def forward(self, x1, x2=None, x3=None, x4=None):
     #def forward(self, hidden_statergb, outrgb, hidden_statedepth, outdepth, x3, x4): ### here1 ## 1 input (x) con los dict
 
-        hidden_statergb, outrgb = self.cnnexpertRGB(x1)
-        hidden_statedepth, outdepth = self.cnnexpertDepth(x2)
-        hidden_stateLidar, outLidar = self.cnnexpertLidar(x3)
-        hidden_stateThermo, outThermo = self.cnnexpertThermo(x4)
-
-        hidden_statergb = torch.cat(hidden_statergb, 0).reshape(len(hidden_statergb), 8, 3, 128, 128)
+        hidden_states_rgb, outrgb = self.cnnexpertRGB(x1)
+        hidden_states_depth, outdepth = self.cnnexpertRGB(x2) #### cambiar a x2
+        #hidden_stateLidar, outLidar = self.cnnexpertLidar(x3)
+        #hidden_stateThermo, outThermo = self.cnnexpertThermo(x4)
 
         #hidden_statergb = torch.as_tensor(hidden_statergb)
 
 
 
         ## coomo es el tamanio del encoder
-        outconcatgating = torch.cat([hidden_statergb, hidden_statedepth, hidden_stateLidar, hidden_stateThermo], dim = -1)
-        outconcatexpertclassifier = torch.stack([outrgb, outdepth, outLidar, outThermo], dim = -1) #(matrix de wxh) #stack las imaagenes
-        gating = self.gatingnetwork(outconcatgating)
-        gating = gating.unsqueeze(1)
-        outfinal = outconcatexpertclassifier * gating # multiplicacion de matriz completa x array
+        # outconcatexpertclassifier = torch.stack([outrgb, outdepth], dim = -1) #(matrix de wxh) #stack las imaagenes
+        input_gating = []
+        for hidden_state_rgb, hidden_state_depth in zip(hidden_states_rgb, hidden_states_depth):
+            input_gating.append(torch.cat([hidden_state_rgb, hidden_state_depth], dim = 1))
+        gating = self.decoder(*input_gating)
+        gating = self.head(gating)
 
         # 2 sopas
         # 1. regresar el que tenga maas prob
+
         # 2. el combinado
+        outfinal = gating[:, 0] * outrgb + gating[:, 1] * outdepth
 
 
 
         ### en vez de sumar, agarrar el max(max probability, o max energy)
-        return outfinal.sum(-1) ######## Regression instead of  classif. Check dim
+        return outfinal ######## Regression instead of  classif. Check dim
 
 
     def train_dataloader(self):
@@ -250,7 +190,7 @@ class LitModelEfficientNet(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         #inputrgb, inputdepth, labels = train_batch
         inputrgb, labels = train_batch
-       
+        labels = labels.long()
         #inputs = train_batch
         #optimizer.zero_grad()
         batch_size = 8
@@ -285,7 +225,7 @@ class LitModelEfficientNet(pl.LightningModule):
         #outputs = self(inputs['rgb'], inputs['depth'], inputLidar, inputThermo) #forward(x1, x2, x3, x4)
         #loss = self.criterion(outputs, inputs['label'])
 
-        outputs = self(inputrgb, inputdepth, inputLidar, inputThermo) #forward(x1, x2, x3, x4)
+        outputs = self(inputrgb, inputrgb) #forward(x1, x2, x3, x4)
         #outputs = self(hidden_statergb, outrgb, hidden_statedepth, outdepth, inputLidar, inputThermo) #forward(x1, x2, x3, x4)
         loss = self.criterion(outputs, labels)
         return loss

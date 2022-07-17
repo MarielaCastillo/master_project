@@ -80,7 +80,7 @@ class LitModelEfficientNet(pl.LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         #self.criterion = nn.MSELoss()
 
-        self.cnnexpertThermo = UNetExpert1(inchannels=1, numclasses=3)
+        self.cnnexpertThermo = UNetExpert1(inchannels=1, numclasses=13)
 
         #self.cnnexpertRGB = smp.Unet('resnet34', classes=13, activation='softmax')
         #self.cnnexpertRGB = CNNExpert1(3, 3) #model_weights[key.replace("auto_encoder.", "")] = model_weights.pop(key)

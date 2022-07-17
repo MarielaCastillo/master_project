@@ -50,7 +50,7 @@ class UNetExpert1(nn.Module):
     def __init__(self, inchannels, numclasses):
         super().__init__()
         #self.model = smp.Unet('efficientnet-b4', encoder_weights=encweights, in_channels=inchannels, classes=numclasses, activation='softmax')
-        self.model = smp.Unet('efficientnet-b4', in_channels=inchannels, classes=numclasses, activation='softmax')
+        self.model = smp.Unet('efficientnet-b4', in_channels=inchannels, classes=numclasses)
         #encoder weights para rgb y no para thermo ni end-to-end
 
         #self.features = salida del encoder
@@ -146,12 +146,19 @@ class LitModelEfficientNet(pl.LightningModule):
         return loss
 
     def test_step(self, test_batch, batch_idx):
+        viz_pred = False
         images, labels = test_batch
         outputs = self(images)
     
-        _, predicted = torch.max(outputs.data, 1)
+        #_, predicted = torch.max(outputs.data, 1)
 
-        loss = F.cross_entropy(predicted, labels)
+        if viz_pred:
+            pred = outputs.argmax(axis=1).detach().cpu().numpy() # detach es para graficar y transformar a numpy
+            pred = pred * 255 / pred.max()
+            plt.imshow(pred[0])
+            plt.show()
+
+        loss = self.criterion(outputs, labels.long())
         #loss = F.mse_loss(predicted, labels)
 
         return loss
