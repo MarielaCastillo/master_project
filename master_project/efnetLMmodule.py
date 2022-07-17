@@ -1,3 +1,4 @@
+from tabnanny import check
 import torch
 import torchvision
 import torch.nn as nn
@@ -13,10 +14,24 @@ import os
 from skimage import io
 
 import numpy as np
+from torch.utils.data.dataloader import default_collate
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+#fl_ir_aligned_1570722156_952177040
+#fl_rgb_1570722156_952177040
+#fl_rgb_labels_1570722156_952177040
+
+#1570722156_952177040
+#1570722156_952177040
+#1570722156_952177040
+
+#fl_ir_aligned_1570729614_4316866600
+#fl_rgb_1570729614_4316866600
+
+#1570729614_4316866600
+#1570729614_4316866600
 
 class MultiModalDataset(Dataset):
     def __init__(self, csv_file, root_dir, transform=None): ### leer los nombres
@@ -40,6 +55,7 @@ class MultiModalDataset(Dataset):
         df = pd.read_csv(pointcloud_path, sep=" ", header=None)
         dflidar = df.drop(df.columns[[3]], axis=1)
         torch_tensor = torch.tensor(dflidar.values)
+        #print(torch_tensor.shape)
         #RuntimeError: stack expects each tensor to be equal size, but got [122455, 3] at entry 0 and [121266, 3] at entry 1
         #collate
 
@@ -54,9 +70,16 @@ class MultiModalDataset(Dataset):
             imagergb = self.transform(imagergb)
             imagedepth = self.transform(imagedepth)
 
+        #sample = {'rgb': imagergb, 'depth': imagedepth, 'point_cloud': torch_tensor, 'label': y_label}
+        #sample = {'rgb': imagergb, 'point_cloud': imagedepth, 'label': y_label}
+
+        #return sample
+
+        return [imagergb, imagedepth, y_label]
+
 
         #return [imagergb, y_label]
-        return [imagergb, imagedepth, y_label]
+
         #return [imagergb, imagedepth, torch_tensor, y_label]
 
 
@@ -87,6 +110,24 @@ class MultiModalDataset(Dataset):
         return len(self.data)
     
 '''
+# Collate_fn required for Dataloader, to "paste rgb to corresponding pc" due to diff sensor modalities
+def collate_multimodal(queries):
+    imgs = []
+    dep = []
+    pcs = []
+    lbls = []
+    returns = {key: default_collate([d[key] for d in queries]) for key in queries[0]
+               if key != 'rgb' and key != 'depth' and key != 'point_cloud' and key != 'label'}  
+    for input in queries:
+        imgs.append(input['rgb'])
+        dep.append(input['depth'])
+        pcs.append(input['depth'])
+        lbls.append(input['label'])
+    returns['rgb'] = imgs
+    returns['depth'] = dep
+    returns['point_cloud'] = pcs
+    returns['label'] = lbls
+    return returns
 
 
 
@@ -111,11 +152,16 @@ class CNNExpert1(nn.Module):
             param.requires_grad = False
 
     def forward(self, input): ### 8, 3, 128, 128
+        #input = torch.FloatTensor(input)
+        #input = input.numpy()
+        #input = torch.Tensor(input)
+
+        #input = torch.stack(input).squeeze(0) #.to(device)
         features = self.efficient_net.extract_features(input)
         hidden_state = self.efficient_net._avg_pooling(features)
         hidden_state = hidden_state.flatten(start_dim=1)
         hidden_state = self.e2h(hidden_state)
-        return hidden_state, self.fc(hidden_state) #8x2 1792x28 error
+        return hidden_state, self.fc(hidden_state)
 
 class CNNExpert2(nn.Module):
     def __init__(self, numclasses):
@@ -206,15 +252,18 @@ class CNNExpert4(nn.Module):
 ####Model
 class LitModelEfficientNet(pl.LightningModule):
     #https://github.com/gthparch/edgeBench/blob/master/pytorch/models/cifarnet.py#L23
-    def __init__(self, batch_size, transform):
+    def __init__(self, batch_size, transform, model1, model2):
         super(LitModelEfficientNet, self).__init__()
         self.batch_size = batch_size
         self.transform = transform
+
         #self.criterion = nn.CrossEntropyLoss()
         self.criterion = nn.MSELoss()
 
-        self.cnnexpertRGB = CNNExpert1(3, 3) ### change to 1
-        self.cnnexpertDepth = CNNExpert1(1, 3) 
+        self.cnnexpertRGB = model1
+        self.cnnexpertDepth = model2
+        #self.cnnexpertRGB = CNNExpert1(3, 3) ### model_weights[key.replace("auto_encoder.", "")] = model_weights.pop(key)
+        #self.cnnexpertDepth = CNNExpert1(1, 3) 
         self.cnnexpertLidar = CNNExpert1(2, 3)
         self.cnnexpertThermo = CNNExpert1(1, 3)
         hidden_concat_dim = self.cnnexpertRGB.hidden_dim + self.cnnexpertDepth.hidden_dim + self.cnnexpertLidar.hidden_dim + self.cnnexpertThermo.hidden_dim
@@ -226,7 +275,64 @@ class LitModelEfficientNet(pl.LightningModule):
             ('softmax', nn.Softmax(dim=1))
         ]))
 
-    def forward(self, x1, x2, x3, x4): ### here1
+    def forward(self, x1, x2, x3, x4):
+    #def forward(self, hidden_statergb, outrgb, hidden_statedepth, outdepth, x3, x4): ### here1 ## 1 input (x) con los dict
+
+        ## collate ############ ASDF ## here2 #cambiar #pending
+        #x1 = x['rgb']
+        #cnnrgb = load(model, PATH)
+        #a, b = cnnrgb(x['rgb'])
+
+        '''
+        ### Expert1 #############################################################################
+        model = CNNExpert1(3,3)
+        checkpoint = torch.load("best_modelExp1.ckpt")
+        #hyper_parameters = checkpoint["hyper_parameters"]
+
+        #model = CNNExpert1(**hyper_parameters)
+
+        model_weights = checkpoint["state_dict"]
+
+        # update keys by dropping `auto_encoder.`
+        for key in list(model_weights):
+            model_weights[key.replace("cnnexpertRGB.", "")] = model_weights.pop(key)
+        
+        model.load_state_dict(model_weights)
+        model.eval()
+
+        #with torch.no_grad():
+        #    y_hat = model(x1)
+
+        hidden_statergb, outrgb = model(x1)
+
+        ### Expert2 #############################################################################
+        model = CNNExpert1(1,3)
+        checkpoint = torch.load("best_modelExp2.ckpt")
+        #hyper_parameters = checkpoint["hyper_parameters"]
+
+        #model = CNNExpert1(**hyper_parameters)
+
+        model_weights = checkpoint["state_dict"]
+
+        # update keys by dropping `auto_encoder.`
+        for key in list(model_weights):
+            model_weights[key.replace("cnnexpertDepth.", "")] = model_weights.pop(key)
+        
+        model.load_state_dict(model_weights)
+        model.eval()
+
+        #with torch.no_grad():
+        #    y_hat = model(x1)
+
+        hidden_statedepth, outdepth = model(x2)
+        '''
+
+
+
+
+
+ 
+
         hidden_statergb, outrgb = self.cnnexpertRGB(x1)
         hidden_statedepth, outdepth = self.cnnexpertDepth(x2)
         hidden_stateLidar, outLidar = self.cnnexpertLidar(x3)
@@ -241,6 +347,10 @@ class LitModelEfficientNet(pl.LightningModule):
         gating = gating.unsqueeze(1)
         outfinal = outconcatexpertclassifier * gating
         return outfinal.sum(-1) ######## Regression instead of  classif. Check dim
+
+
+
+
 
     def train_dataloader(self):
         #trainset = torchvision.datasets.Kitti(root='./data', train=True, download=True, transform=self.transform)
@@ -261,8 +371,27 @@ class LitModelEfficientNet(pl.LightningModule):
 
 
 
+        #trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
+        #                                    shuffle=True, num_workers=10, collate_fn = collate_multimodal) #2
+
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
                                             shuffle=True, num_workers=10) #2
+        
+        
+
+        for batch_idx, sample in enumerate(trainloader):
+            #print(len(sample['rgb']))             # Nr of elements in this batch
+            # show_processed_img(sample['rgb'][0])  # Displays first image of each batch 
+            if batch_idx == 0 : 
+                print("------------------------------")
+                #print(sample['rgb'][0].shape)         #Size of first img of first batch (The batch is a list) (batch idx = 0) torch.Size([3, 384, 1280])
+                #print(sample['depth'][0].shape) #Size of first pc sample of first batch: torch.Size([3, 124441])  but if cut with cvml:(3, 20332)
+                #print(sample['point_cloud'][0].shape)
+                #print(sample['label'][0].shape)
+                print("------------------------------")
+        
+        
+        
         return trainloader
 
     def test_dataloader(self):
@@ -282,7 +411,7 @@ class LitModelEfficientNet(pl.LightningModule):
         optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
         return optimizer
     '''
-    def training_step_before(self, train_batch, batch_idx):
+    def training_step_before(self, train_batch, batch_idx): #### CUDA
         inputs, labels = train_batch
         #optimizer.zero_grad()
         batch_size = 8
@@ -307,13 +436,63 @@ class LitModelEfficientNet(pl.LightningModule):
     
     def training_step(self, train_batch, batch_idx):
         inputrgb, inputdepth, labels = train_batch
+        '''
+        #################################
+        ### Expert1 #############################################################################
+        model = CNNExpert1(3,3)
+        checkpoint = torch.load("best_modelExp1.ckpt")
+        #hyper_parameters = checkpoint["hyper_parameters"]
+
+        #model = CNNExpert1(**hyper_parameters)
+
+        model_weights = checkpoint["state_dict"]
+
+        # update keys by dropping `auto_encoder.`
+        for key in list(model_weights):
+            model_weights[key.replace("cnnexpertRGB.", "")] = model_weights.pop(key)
+        
+        model.load_state_dict(model_weights)
+        model.eval()
+
+        #with torch.no_grad():
+        #    y_hat = model(x1)
+
+        hidden_statergb, outrgb = model(inputrgb)
+
+        ### Expert2 #############################################################################
+        model = CNNExpert1(1,3)
+        checkpoint = torch.load("best_modelExp2.ckpt")
+        #hyper_parameters = checkpoint["hyper_parameters"]
+
+        #model = CNNExpert1(**hyper_parameters)
+
+        model_weights = checkpoint["state_dict"]
+
+        # update keys by dropping `auto_encoder.`
+        for key in list(model_weights):
+            model_weights[key.replace("cnnexpertDepth.", "")] = model_weights.pop(key)
+        
+        model.load_state_dict(model_weights)
+        model.eval()
+
+        #with torch.no_grad():
+        #    y_hat = model(x1)
+
+        hidden_statedepth, outdepth = model(inputdepth)
+        '''
+
+
+
+        #################################
+        
+        #inputs = train_batch
         #optimizer.zero_grad()
         batch_size = 8
         w, h = 128, 128
         #w=1392
         #h = 512
 
-        labels = torch.rand(batch_size, 3)
+        #labels = torch.rand(batch_size, 3)
         #inputrgb = torch.rand(batch_size, 3, w, h)
         #inputdepth = torch.rand(batch_size, 1, w, h)
         inputLidar = torch.rand(batch_size, 2, w, h)
@@ -337,10 +516,18 @@ class LitModelEfficientNet(pl.LightningModule):
         
         #inputrgb = torch.rand(batch_size, 3, w, h)
 
-        
+        #outputs = self(inputs['rgb'], inputs['depth'], inputLidar, inputThermo) #forward(x1, x2, x3, x4)
+        #loss = self.criterion(outputs, inputs['label'])
+
         outputs = self(inputrgb, inputdepth, inputLidar, inputThermo) #forward(x1, x2, x3, x4)
+        #outputs = self(hidden_statergb, outrgb, hidden_statedepth, outdepth, inputLidar, inputThermo) #forward(x1, x2, x3, x4)
         loss = self.criterion(outputs, labels)
         return loss
+
+        
+        #histate, outputs = self(inputrgb) #forward(x1, x2, x3, x4)
+        #loss = self.criterion(outputs, labels)
+        #return loss
 
     def test_step(self, test_batch, batch_idx):
         images, labels = test_batch
@@ -352,3 +539,6 @@ class LitModelEfficientNet(pl.LightningModule):
         loss = F.mse_loss(predicted, labels)
 
         return loss
+
+##Revisar
+#torch.save(model.state_dict(), save_path)
