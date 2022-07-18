@@ -1,26 +1,38 @@
+import torch
 from pytorch_lightning import Trainer
-from efnetLMmoduleExpert1SS import LitModelEfficientNet
+from efnetLMmoduleExpert1SS import LitModelEfficientNetRgb
+from efnetLMmoduleExpert2SS import LitModelEfficientNetThermo
 from efnetLMmoduleSS import LitModelEfficientNetFull
 import torchvision.transforms as transforms
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 
+from efnetLMmoduleExpert2SS import ScaleThermal
+
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def main():
-    transform = transforms.Compose(
+    transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
         transforms.Resize((320, 960)),
         transforms.Normalize((0.5,), (0.5,))])
-    model_rgb = LitModelEfficientNet.load_from_checkpoint(batch_size=1, checkpoint_path="checkpoints/epoch=0-step=489.ckpt", transform=transform)
-    model_thermo = LitModelEfficientNet.load_from_checkpoint(batch_size=1, checkpoint_path="checkpoints/epoch=1-step=978.ckpt", transform=transform)
-    expert_rgb = model_rgb.cnnexpertRGB
-    expert_thermo = model_thermo.cnnexpertRGB
+
+    transform_thermo = transforms.Compose(
+        [torch.tensor,
+        ScaleThermal(max_value=30000),
+        transforms.Resize((320, 960)),
+        #transforms.Resize((200, 200)),
+        transforms.Normalize((0.5,), (0.5,))])
+
+    model_rgb = LitModelEfficientNetRgb.load_from_checkpoint(batch_size=1, checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt", transform=transform_rgb)
+    model_thermo = LitModelEfficientNetThermo.load_from_checkpoint(batch_size=1, checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt", transform=transform_thermo)
+    expert_rgb = model_rgb.cnnexpert
+    expert_thermo = model_thermo.cnnexpert
 
     checkpoint_callback = ModelCheckpoint(dirpath='models_with_pretrained_experts/')
     trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
-    model = LitModelEfficientNetFull(1, transform, expert_rgb, expert_thermo) 
+    model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo, model1=expert_rgb, model2=expert_thermo) 
     trainer.fit(model)
     
 

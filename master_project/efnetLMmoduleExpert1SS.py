@@ -18,30 +18,30 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class MultiModalDataset(Dataset):
-    def __init__(self, rgb_path, thermo_path, label_path, transform=None):
+    def __init__(self, rgb_path, thermo_path, label_path, transform_rgb=None, transform_thermo=None):
         self.rgb_path = rgb_path
         self.thermo_path = thermo_path
         self.label_path = label_path
         self.rgb_filepaths = [f for f in sorted(os.listdir(rgb_path))]
         self.thermo_filepaths = [f for f in sorted(os.listdir(thermo_path))]
         self.label_filepaths = [f for f in sorted(os.listdir(label_path))]
-        self.transform = transform
+        self.transform_thermo= transform_thermo
+        self.transform_rgb = transform_rgb
 
     def __getitem__(self, idx):
         img_rgb = io.imread(self.rgb_path+'/'+self.rgb_filepaths[idx])
         img_thermo = io.imread(self.thermo_path+'/'+self.thermo_filepaths[idx])
+        img_thermo = np.expand_dims(img_thermo, axis=0).astype(np.int16)
         label = io.imread(self.label_path+'/'+self.label_filepaths[idx])
-
-        img_thermo = img_thermo.astype(float)
-
-        if self.transform:
-            img_thermo = self.transform(img_thermo)
-            img_rgb = self.transform(img_rgb)
+        if self.transform_rgb:
+            img_rgb = self.transform_rgb(img_rgb)
+        if self.transform_thermo:
+            img_thermo = self.transform_thermo(img_thermo)
+            
             # label = self.transform(label)
             
-        #return img_rgb, img_thermo, label
+        return img_rgb, img_thermo, label
         #return img_rgb, label
-        return img_rgb, label
 
     def __len__(self):
         return len(self.rgb_filepaths)
@@ -49,48 +49,32 @@ class MultiModalDataset(Dataset):
 class UNetExpert1(nn.Module):
     def __init__(self, inchannels, numclasses):
         super().__init__()
-        #self.model = smp.Unet('efficientnet-b4', encoder_weights=encweights, in_channels=inchannels, classes=numclasses, activation='softmax')
-        self.model = smp.Unet('efficientnet-b4', in_channels=inchannels, classes=numclasses)
-        #encoder weights para rgb y no para thermo ni end-to-end
+        self.inchannels = inchannels
+        self.model = smp.Unet('efficientnet-b4', in_channels=self.inchannels, classes=numclasses)
 
-        #self.features = salida del encoder
-        #self.decoder = asdf
-    
     def forward(self, input):
-        #hidden_state = 1raparte(input)
-        #output = self.decoder(hidden_state)
         hidden_state = self.model.encoder(input)
         decoder_output = self.model.decoder(*hidden_state)
 
         masks = self.model.segmentation_head(decoder_output)
-        '''
-        if self.model.classification_head is not None:
-            labels = self.model.classification_head(hidden_state[-1])
-            return hidden_state, masks, labels
-        '''
+
         return hidden_state, masks
 
    
 ####Model
-class LitModelEfficientNet(pl.LightningModule):
+class LitModelEfficientNetRgb(pl.LightningModule):
     #https://github.com/gthparch/edgeBench/blob/master/pytorch/models/cifarnet.py#L23
     def __init__(self, batch_size, transform):
-        super(LitModelEfficientNet, self).__init__()
+        super(LitModelEfficientNetRgb, self).__init__()
         self.batch_size = batch_size
-        self.transform = transform
+        self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
-        #self.criterion = nn.MSELoss()
 
-        self.cnnexpertRGB = UNetExpert1(inchannels=3, numclasses=13)
+        self.cnnexpert = UNetExpert1(inchannels=3, numclasses=13)
 
-        #self.cnnexpertRGB = smp.Unet('resnet34', classes=13, activation='softmax')
-        #self.cnnexpertRGB = CNNExpert1(3, 3) #model_weights[key.replace("auto_encoder.", "")] = model_weights.pop(key)
 
     def forward(self, x1): ### here1
-        #hidden_statergb, outrgb = self.cnnexpertRGB(x1)
-
-        #hiddenrgb, outrgb, pred_labels = self.cnnexpertRGB(x1)
-        hiddenrgb, outrgb,  = self.cnnexpertRGB(x1)
+        hiddenrgb, outrgb,  = self.cnnexpert(x1)
         #return pred_labels
         return outrgb
 
@@ -102,10 +86,10 @@ class LitModelEfficientNet(pl.LightningModule):
         trainset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
                                         thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
                                         label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform= self.transform)  
+                                        transform_rgb= self.transform_rgb)  
 
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=10)                                                                             
+                                            shuffle=True, num_workers=4)                                                                             
         return trainloader
 
     def test_dataloader(self):
@@ -116,10 +100,10 @@ class LitModelEfficientNet(pl.LightningModule):
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
                                         thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
                                         label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform= self.transform)  
+                                        transform_rgb= self.transform_rgb)  
                                         
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=10)   
+                                            shuffle=True, num_workers=4)   
         return testloader
 
     ### optimizers and schedulers
@@ -129,34 +113,43 @@ class LitModelEfficientNet(pl.LightningModule):
     
     def training_step(self, train_batch, batch_idx):
         viz_pred = False
-        inputrgb, labels = train_batch
+        input_rgb, _, labels = train_batch
         #optimizer.zero_grad()
 
-        outputs = self(inputrgb) #forward(x1, x2, x3, x4)
+        outputs = self(input_rgb) #forward(x1, x2, x3, x4)
         if viz_pred:
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
             pred = pred * 255 / pred.max()
             plt.imshow(pred[0])
             plt.show()
 
-        #labels = labels.repeat(1, 3, 1, 1) ##### CHECK THIS ASDF #ASDF #just to make it work
-
-
         loss = self.criterion(outputs, labels.long())
         return loss
 
     def test_step(self, test_batch, batch_idx):
-        viz_pred = False
-        images, labels = test_batch
+        viz_pred = True
+        images, _, labels = test_batch
         outputs = self(images)
     
         #_, predicted = torch.max(outputs.data, 1)
 
         if viz_pred:
+
+            lbl = labels.detach().cpu().numpy() # detach es para graficar y transformar a numpy
+            #lbl = lbl * 255 / lbl.max()
+            plt.imshow(lbl[0])
+            plt.show()
+
+
             pred = outputs.argmax(axis=1).detach().cpu().numpy() # detach es para graficar y transformar a numpy
             pred = pred * 255 / pred.max()
             plt.imshow(pred[0])
             plt.show()
+
+            
+
+
+
 
         loss = self.criterion(outputs, labels.long())
         #loss = F.mse_loss(predicted, labels)

@@ -14,16 +14,17 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 ####Model
 class LitModelEfficientNetFull(pl.LightningModule):
-    def __init__(self, batch_size, transform, model1, model2):
+    def __init__(self, batch_size, transform_rgb, transform_thermo, model1, model2):
         super(LitModelEfficientNetFull, self).__init__()
         self.batch_size = batch_size
-        self.transform = transform
+        self.transform_rgb = transform_rgb
+        self.transform_thermo = transform_thermo
 
         self.criterion = nn.CrossEntropyLoss()
 
         self.cnnexpertRGB = model1
-        self.cnnexpertDepth = model2
-
+        self.cnnexpertThermo = model2
+        
         encoder_channels = list(self.cnnexpertRGB.model.encoder.out_channels)
         encoder_channels = [ 2 * a  for a in encoder_channels]
         decoder_channels = (256, 128, 64, 32, 16)
@@ -44,7 +45,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
     def forward(self, x1, x2=None, x3=None, x4=None):
         hidden_states_rgb, outrgb = self.cnnexpertRGB(x1)
-        hidden_states_depth, outdepth = self.cnnexpertRGB(x2)
+        hidden_states_depth, outdepth = self.cnnexpertThermo(x2)
 
         input_gating = []
         for hidden_state_rgb, hidden_state_depth in zip(hidden_states_rgb, hidden_states_depth):
@@ -58,7 +59,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         # 2. el combinado
         outfinal = gating[:, 0] * outrgb + gating[:, 1] * outdepth
 
-        return outfinal
+        return outfinal  # here breakpoint for visualizer
 
     def train_dataloader(self):
         print("dir_path ", dir_path)
@@ -68,7 +69,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         trainset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
                                         thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
                                         label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform= self.transform)       
+                                        transform_rgb= self.transform_rgb, transform_thermo=self.transform_thermo)       
 
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
                                             shuffle=True, num_workers=10) #2
@@ -82,7 +83,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
                                         thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
                                         label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform= self.transform)       
+                                        transform_rgb= self.transform_rgb, transform_thermo=self.transform_thermo)       
 
 
 
@@ -122,14 +123,15 @@ class LitModelEfficientNetFull(pl.LightningModule):
     
     def training_step(self, train_batch, batch_idx):
         #inputrgb, inputdepth, labels = train_batch
-        inputrgb, labels = train_batch
+        input_rgb, input_thermo, labels = train_batch
         labels = labels.long()
 
-        outputs = self(inputrgb, inputrgb)  # forward(x1, x2, x3, x4) ### CAMBIAR
+        outputs = self(input_rgb, input_thermo)  # forward(x1, x2, x3, x4) ### CAMBIAR
         loss = self.criterion(outputs, labels)
         return loss
 
     def test_step(self, test_batch, batch_idx):
+        # check this
         images, labels = test_batch
         outputs = self(images)
     
