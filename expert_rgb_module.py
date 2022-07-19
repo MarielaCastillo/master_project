@@ -111,7 +111,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
         return loss
 
-    def test_step(self, test_batch):
+    def test_step(self, test_batch, batch_idx):
         viz_pred = True
         images, _, labels = test_batch
         outputs = self(images)
