@@ -37,6 +37,7 @@ class MultiModalDataset(Dataset):
     def __len__(self):
         return len(self.rgb_filepaths)
 
+
 class UNetExpert1(nn.Module):
     def __init__(self, inchannels, numclasses):
         super().__init__()
@@ -52,7 +53,7 @@ class UNetExpert1(nn.Module):
         return hidden_state, masks
 
    
-####Model
+# ###Model
 class LitModelEfficientNetRgb(pl.LightningModule):
     def __init__(self, batch_size, transform):
         super(LitModelEfficientNetRgb, self).__init__()
@@ -62,15 +63,11 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         self.cnnexpert = UNetExpert1(inchannels=3, numclasses=13)
 
-
     def forward(self, x1): ### here1
         hiddenrgb, outrgb,  = self.cnnexpert(x1)
-        #return pred_labels
         return outrgb
 
     def train_dataloader(self):
-        print("dir_path ", dir_path)
-        print(dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00/fl_rgb/')
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
 
         trainset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
@@ -83,8 +80,6 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         return trainloader
 
     def test_dataloader(self):
-        print("dir_path ", dir_path)
-        print(dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00/fl_rgb/')
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
 
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
@@ -101,12 +96,12 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
         return optimizer
     
-    def training_step(self, train_batch, batch_idx):
+    def training_step(self, train_batch):
         viz_pred = False
         input_rgb, _, labels = train_batch
         #optimizer.zero_grad()
 
-        outputs = self(input_rgb) #forward(x1, x2, x3, x4)
+        outputs = self(input_rgb)
         if viz_pred:
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
             pred = pred * 255 / pred.max()
@@ -116,32 +111,23 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
         return loss
 
-    def test_step(self, test_batch, batch_idx):
+    def test_step(self, test_batch):
         viz_pred = True
         images, _, labels = test_batch
         outputs = self(images)
-    
-        #_, predicted = torch.max(outputs.data, 1)
 
         if viz_pred:
-
-            lbl = labels.detach().cpu().numpy() # detach es para graficar y transformar a numpy
-            #lbl = lbl * 255 / lbl.max()
+            # Labels
+            lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
             plt.imshow(lbl[0])
             plt.show()
 
-
-            pred = outputs.argmax(axis=1).detach().cpu().numpy() # detach es para graficar y transformar a numpy
+            # Prediction
+            pred = outputs.argmax(axis=1).detach().cpu().numpy()
             pred = pred * 255 / pred.max()
             plt.imshow(pred[0])
             plt.show()
 
-            
-
-
-
-
         loss = self.criterion(outputs, labels.long())
-        #loss = F.mse_loss(predicted, labels)
 
         return loss
