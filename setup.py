@@ -10,6 +10,9 @@ setup(
       packages=find_packages(),
       install_requires=[
                 'torch',
-                'torchvision'
+                'torchvision',
+                'smp',
+                'skimage',
+                'matplotlib'
                 ]
      )
