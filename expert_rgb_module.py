@@ -1,16 +1,10 @@
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torchvision
-import torchvision.transforms as transforms
-from efficientnet_pytorch import EfficientNet
 from skimage import io
 from torch.utils.data import Dataset
 
@@ -38,10 +32,7 @@ class MultiModalDataset(Dataset):
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
             
-            # label = self.transform(label)
-            
         return img_rgb, img_thermo, label
-        #return img_rgb, label
 
     def __len__(self):
         return len(self.rgb_filepaths)
@@ -63,7 +54,6 @@ class UNetExpert1(nn.Module):
    
 ####Model
 class LitModelEfficientNetRgb(pl.LightningModule):
-    #https://github.com/gthparch/edgeBench/blob/master/pytorch/models/cifarnet.py#L23
     def __init__(self, batch_size, transform):
         super(LitModelEfficientNetRgb, self).__init__()
         self.batch_size = batch_size

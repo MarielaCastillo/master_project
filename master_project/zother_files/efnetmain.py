@@ -1,6 +1,6 @@
 from pytorch_lightning import Trainer
 #from efnetLMmodule import LitModelEfficientNet
-from efnetLMmoduleSS import LitModelEfficientNet
+from main_module import LitModelEfficientNet
 import torchvision.transforms as transforms
 
 from efficientnet_pytorch import EfficientNet

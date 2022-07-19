@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 from torch.utils.data import Dataset
-from efnetLMmoduleExpert1SS import UNetExpert1
+from expert_rgb_module import UNetExpert1
 
-from efnetLMmoduleExpert1SS import MultiModalDataset
+from expert_rgb_module import MultiModalDataset
 
 import matplotlib.pyplot as plt
 

@@ -1,13 +1,13 @@
 import torch
 from pytorch_lightning import Trainer
-from efnetLMmoduleExpert1SS import LitModelEfficientNetRgb
-from efnetLMmoduleExpert2SS import LitModelEfficientNetThermo
-from efnetLMmoduleSS import LitModelEfficientNetFull
+from expert_rgb_module import LitModelEfficientNetRgb
+from expert_thermo_module import LitModelEfficientNetThermo
+from main_module import LitModelEfficientNetFull
 import torchvision.transforms as transforms
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from efnetLMmoduleExpert2SS import ScaleThermal
+from expert_thermo_module import ScaleThermal
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))

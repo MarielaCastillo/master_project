@@ -1,14 +1,14 @@
 import os 
 from pytorch_lightning import Trainer
 #from efnetLMmoduleseparated import LitModelEfficientNet
-from efnetLMmoduleExpert1SS import LitModelEfficientNetRgb
-from efnetLMmoduleExpert2SS import LitModelEfficientNetThermo
+from expert_rgb_module import LitModelEfficientNetRgb
+from expert_thermo_module import LitModelEfficientNetThermo
 #from efnetLMmoduleExpert2SS import LitModelEfficientNet
 #from efnetLMmoduleExpert3 import LitModelEfficientNet
 import torchvision.transforms as transforms
 import torch
 
-from efnetLMmoduleExpert2SS import ScaleThermal
+from expert_thermo_module import ScaleThermal
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 

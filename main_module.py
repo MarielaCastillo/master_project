@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from efnetLMmoduleExpert1SS import MultiModalDataset
+from expert_rgb_module import MultiModalDataset
 
 from segmentation_models_pytorch.unet.decoder import UnetDecoder
 from segmentation_models_pytorch.base.heads import SegmentationHead
