@@ -19,7 +19,7 @@ class MultiModalDataset(Dataset):
         self.rgb_filepaths = [f for f in sorted(os.listdir(rgb_path))]
         self.thermo_filepaths = [f for f in sorted(os.listdir(thermo_path))]
         self.label_filepaths = [f for f in sorted(os.listdir(label_path))]
-        self.transform_thermo= transform_thermo
+        self.transform_thermo = transform_thermo
         self.transform_rgb = transform_rgb
 
     def __getitem__(self, idx):
@@ -63,35 +63,35 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         self.cnnexpert = UNetExpert1(inchannels=3, numclasses=13)
 
-    def forward(self, x1): ### here1
+    def forward(self, x1):  # ## here1
         hiddenrgb, outrgb,  = self.cnnexpert(x1)
         return outrgb
 
     def train_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
 
-        trainset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
-                                        thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
-                                        label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform_rgb= self.transform_rgb)  
+        trainset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
+                                     thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
+                                     label_path=dir_path2 + '/' + 'fl_rgb_labels',
+                                     transform_rgb=self.transform_rgb)
 
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=4)                                                                             
+                                                  shuffle=True, num_workers=4)
         return trainloader
 
     def test_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
 
-        testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
-                                        thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
-                                        label_path= dir_path2 + '/' + 'fl_rgb_labels',
-                                        transform_rgb= self.transform_rgb)  
+        testset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
+                                    thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
+                                    label_path=dir_path2 + '/' + 'fl_rgb_labels',
+                                    transform_rgb=self.transform_rgb)
                                         
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=4)   
+                                                 shuffle=True, num_workers=4)
         return testloader
 
-    ### optimizers and schedulers
+    # ## optimizers and schedulers
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
         return optimizer
@@ -99,7 +99,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
     def training_step(self, train_batch):
         viz_pred = False
         input_rgb, _, labels = train_batch
-        #optimizer.zero_grad()
+        # optimizer.zero_grad()
 
         outputs = self(input_rgb)
         if viz_pred:

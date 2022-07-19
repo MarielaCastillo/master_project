@@ -11,8 +11,8 @@ setup(
       install_requires=[
                 'torch',
                 'torchvision',
-                'smp',
-                'skimage',
-                'matplotlib'
+                'matplotlib',
+                'scikit-image',
+                'segmentation-models-pytorch'
                 ]
      )
