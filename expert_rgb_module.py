@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
@@ -10,6 +11,37 @@ from torch.utils.data import Dataset
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+class MultiModalDataset2(Dataset):
+    def __init__(self, txt_file, file_path, label_path, transform_rgb=None, transform_thermo=None):
+        self.annotations = pd.read_csv(txt_file, sep=" ", header=None)
+        self.labels_path = label_path
+        self.files_path = file_path
+        self.transform_thermo = transform_thermo
+        self.transform_rgb = transform_rgb
+
+    def __getitem__(self, index):
+        thermo_path = os.path.join(self.files_path, self.annotations.iloc[index, 0]+".jpeg")
+        img_thermo = io.imread(thermo_path)
+
+        file_name = self.annotations.iloc[index, 0].replace("PreviewData", "")
+
+        rgb_path = os.path.join(self.files_path, file_name+"RGB.jpg")
+        img_rgb = io.imread(rgb_path)
+
+        lbl_path = os.path.join(self.labels_path, file_name+"mask.jpg")
+        label = io.imread(lbl_path)
+
+        if self.transform_rgb:
+            img_rgb = self.transform_rgb(img_rgb)
+        if self.transform_thermo:
+            img_thermo = self.transform_thermo(img_thermo)
+
+        return img_rgb, img_thermo, label
+
+
+    def __len__(self):
+        return len(self.annotations)
+
 
 class MultiModalDataset(Dataset):
     def __init__(self, rgb_path, thermo_path, label_path, transform_rgb=None, transform_thermo=None):
@@ -19,7 +51,7 @@ class MultiModalDataset(Dataset):
         self.rgb_filepaths = [f for f in sorted(os.listdir(rgb_path))]
         self.thermo_filepaths = [f for f in sorted(os.listdir(thermo_path))]
         self.label_filepaths = [f for f in sorted(os.listdir(label_path))]
-        self.transform_thermo = transform_thermo
+        self.transform_thermo= transform_thermo
         self.transform_rgb = transform_rgb
 
     def __getitem__(self, idx):
@@ -31,7 +63,7 @@ class MultiModalDataset(Dataset):
             img_rgb = self.transform_rgb(img_rgb)
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
-            
+
         return img_rgb, img_thermo, label
 
     def __len__(self):
@@ -52,7 +84,7 @@ class UNetExpert1(nn.Module):
 
         return hidden_state, masks
 
-   
+
 # ###Model
 class LitModelEfficientNetRgb(pl.LightningModule):
     def __init__(self, batch_size, transform):
@@ -61,45 +93,53 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
 
-        self.cnnexpert = UNetExpert1(inchannels=3, numclasses=13)
+        self.cnnexpert = UNetExpert1(inchannels=3, numclasses=80)
 
-    def forward(self, x1):  # ## here1
+    def forward(self, x1): ### here1
         hiddenrgb, outrgb,  = self.cnnexpert(x1)
         return outrgb
 
     def train_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
+        dir_path3 = dir_path + '/' + 'align'
+        '''
+        trainset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
+                                        thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
+                                        label_path= dir_path2 + '/' + 'fl_rgb_labels',
+                                        transform_rgb= self.transform_rgb)  
+        '''
 
-        trainset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
-                                     thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
-                                     label_path=dir_path2 + '/' + 'fl_rgb_labels',
-                                     transform_rgb=self.transform_rgb)
+        trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     label_path=dir_path3 + '/' + 'Annotations',
+                                     transform_rgb=self.transform_rgb)  
+        #'''       
 
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
-                                                  shuffle=True, num_workers=4)
+                                            shuffle=True, num_workers=4)                                                                             
         return trainloader
 
     def test_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
 
-        testset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
-                                    thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
-                                    label_path=dir_path2 + '/' + 'fl_rgb_labels',
-                                    transform_rgb=self.transform_rgb)
-                                        
+        testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
+                                        thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
+                                        label_path= dir_path2 + '/' + 'fl_rgb_labels',
+                                        transform_rgb= self.transform_rgb)  
+
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                                 shuffle=True, num_workers=4)
+                                            shuffle=True, num_workers=4)   
         return testloader
 
-    # ## optimizers and schedulers
+    ### optimizers and schedulers
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
         return optimizer
-    
+
     def training_step(self, train_batch):
         viz_pred = False
         input_rgb, _, labels = train_batch
-        # optimizer.zero_grad()
+        #optimizer.zero_grad()
 
         outputs = self(input_rgb)
         if viz_pred:
@@ -107,6 +147,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             pred = pred * 255 / pred.max()
             plt.imshow(pred[0])
             plt.show()
+
+        print(torch.unique(labels))
 
         loss = self.criterion(outputs, labels.long())
         return loss
@@ -131,5 +173,3 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
 
         return loss
-
-# parsear el xml y generar una imagen con base en la clase que diga (pintar ese box)
