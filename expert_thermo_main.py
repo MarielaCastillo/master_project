@@ -21,7 +21,7 @@ def main():
     model = LitModelEfficientNetThermo(1, transform_thermo)
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_thermo/')
 
-    # trainer = Trainer(gpus=1, max_epochs=2)
+    # trainer = Trainer(gpus=1, max_epochs=2, callbacks=[checkpoint_callback]))
     trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
     trainer.fit(model)
 

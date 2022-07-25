@@ -131,3 +131,5 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
 
         return loss
+
+# parsear el xml y generar una imagen con base en la clase que diga (pintar ese box)
