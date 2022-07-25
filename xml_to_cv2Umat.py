@@ -1,6 +1,9 @@
 import os
-import sys
+import numpy as np
 import pandas as pd
+import itertools as it
+import PIL.Image
+import torch
 import xml.etree.ElementTree as ET 
 
 
@@ -23,8 +26,6 @@ def main2():
     xml_path = os.path.join(lbl_str, file_name+".xml")
     print("xml_path", xml_path)
     xml_file = pd.read_xml(xml_path)
-    print(xml_file)
-    print(xml_file.to_string())
 
 
     #for index, row in file_names.iterrows():
@@ -32,24 +33,60 @@ def main2():
     #    print("row: ", row)
     print(file_names.shape)
     #print(file_names)
-def get_objects(root):
+
+def tensor_to_image(tensor):
+    tensor = tensor*255
+    tensor = np.array(tensor, dtype=np.uint8)
+    if np.ndim(tensor)>3:
+        assert tensor.shape[0] == 1
+        tensor = tensor[0]
+    return PIL.Image.fromarray(tensor)
+
+def paint(tensor, class_name, xmin, xmax, ymin, ymax):
+    print("hi")
+    for i in it.chain(range(30, 52), range(1, 18)):
+        print(i)
+
+
+
+
+def get_tensor_painted(root, tensor):
     print(root)
     print(root[5][0].text)
     length = len(root.findall('object'))
     
-    print(length)
+    print("number of objects: ", length)
     for i in range(5, 5+length):
         print("i",i)
+        '''
         print(root[i][0].text)
         print(root[i][2][0].text)
         print(root[i][2][1].text)
         print(root[i][2][2].text)
         print(root[i][2][3].text)
+        '''
         class_name = root[i][0].text
-        xmin = root[i][2][0].text
-        ymin = root[i][2][1].text
-        xmax = root[i][2][2].text
-        ymax = root[i][2][3].text
+        xmin = int(root[i][2][0].text)
+        ymin = int(root[i][2][1].text)
+        xmax = int(root[i][2][2].text)
+        ymax = int(root[i][2][3].text)
+
+        if class_name == "car":
+            colour = 1
+        if class_name == "person":
+            colour = 2
+        if class_name == "bicycle":
+            colour = 3
+
+        for i in range(xmin, xmax):
+            for j in range(ymin, ymax):
+                tensor[i,j] = colour
+    
+    return tensor
+
+        
+
+        
 
         
 
@@ -70,7 +107,24 @@ def main():
 
     tree = ET.parse(xml_path) 
     xml_root = tree.getroot() 
-    get_objects(xml_root)
+
+
+
+    # ------------
+    tensor = torch.zeros(640, 512)
+    # tensor[:,1:50] = 1
+    # print(tensor)
+
+    # ------------
+
+    new_tensor = get_tensor_painted(xml_root, tensor)
+    new_tensor = torch.transpose(new_tensor, 0,1)
+    image = tensor_to_image(new_tensor)
+
+    im1 = image.save("imageasdf5.jpg")
+
+
+
     print("yay")
     
     '''
@@ -89,7 +143,6 @@ def main():
 
 
     
-
 
 
 
