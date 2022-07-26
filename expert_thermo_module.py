@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from expert_rgb_module import UNetExpert1
 
 from expert_rgb_module import MultiModalDataset
+from expert_rgb_module import MultiModalDataset2
 
 import matplotlib.pyplot as plt
 
@@ -36,14 +37,22 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         return output
 
     def train_dataloader(self):
-        print("dir_path ", dir_path)
-        print(dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00/fl_rgb/')
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
-
+        dir_path3 = dir_path + '/' + 'align'
+        
+        '''
         trainset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
                                      thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
                                      label_path=dir_path2 + '/' + 'fl_rgb_labels',
                                      transform_thermo=self.transform_thermo)
+
+        '''
+        trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #label_path=dir_path + '/' + 'labels_ss',
+                                     label_path=dir_path + '/' + 'labels_npy',
+                                     transform_thermo=self.transform_thermo)  
+        
 
         trainloader = torch.utils.data.DataLoader(trainset,
                                                   batch_size=self.batch_size,
@@ -51,14 +60,21 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         return trainloader
 
     def test_dataloader(self):
-        print("dir_path ", dir_path)
-        print(dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00/fl_rgb/')
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
+        dir_path3 = dir_path + '/' + 'align'
 
+        '''
         testset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
                                     thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
                                     label_path=dir_path2 + '/' + 'fl_rgb_labels',
                                     transform_thermo=self.transform_thermo)
+        '''
+
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #label_path=dir_path + '/' + 'labels_ss',
+                                     label_path=dir_path + '/' + 'labels_npy',
+                                     transform_thermo=self.transform_thermo)         
                                         
         testloader = torch.utils.data.DataLoader(testset,
                                                  batch_size=self.batch_size,
