@@ -42,22 +42,14 @@ def tensor_to_image(tensor):
         tensor = tensor[0]
     return PIL.Image.fromarray(tensor)
 
-def paint(tensor, class_name, xmin, xmax, ymin, ymax):
-    print("hi")
-    for i in it.chain(range(30, 52), range(1, 18)):
-        print(i)
 
-
-
-
-def get_tensor_painted(root, tensor):
-    print(root)
-    print(root[5][0].text)
+def get_tensor_painted(root, tensor, file):
+    # print(root)
+    # print(root[5][0].text)
     length = len(root.findall('object'))
     
-    print("number of objects: ", length)
+    # print("number of objects: ", length)
     for i in range(5, 5+length):
-        print("i",i)
         '''
         print(root[i][0].text)
         print(root[i][2][0].text)
@@ -73,25 +65,28 @@ def get_tensor_painted(root, tensor):
 
         if class_name == "car":
             colour = 1
-        if class_name == "person":
+        if class_name == "person":  # 00266
             colour = 2
-        if class_name == "bicycle":
+        if class_name == "bicycle":  # 00266
             colour = 3
+            print("File with bicycle:", file)
+        if class_name == "dog":  # 00266
+            colour = 4
+            print("File with dog:", file)
 
         for i in range(xmin, xmax):
             for j in range(ymin, ymax):
+                if i == 640:
+                    print("file with ymax 640", file)
+                    break
+                if j == 512:
+                    print("file with xmax 512", file)
+                    break
                 tensor[i,j] = colour
     
     return tensor
 
-        
-
-        
-
-        
-
-
-def main():
+def just_first():
     # define folders and file
     dir_path3 = dir_path + '/' + 'align'
     txt_file = dir_path3 + '/' + 'align_train.txt'
@@ -121,8 +116,50 @@ def main():
     new_tensor = torch.transpose(new_tensor, 0,1)
     image = tensor_to_image(new_tensor)
 
-    im1 = image.save("imageasdf5.jpg")
+    im1 = image.save("labels_ss/imageasdf5.jpg")
 
+def get_images():
+    # define folders and file
+    dir_path3 = dir_path + '/' + 'align'
+    txt_file = dir_path3 + '/' + 'align_train.txt'
+    label_path=dir_path3 + '/' + 'Annotations'
+
+    # get path of the xml file
+    file_names = pd.read_csv(txt_file, sep=" ", header=None)
+    lbl_str = ''.join(label_path) #change tuple to str
+    # file_name = file_names.loc[0, 0].replace(" ", "")
+
+    for index, row in file_names.iterrows():
+        file_name = file_names.loc[index, 0].replace(" ", "")
+        xml_path = os.path.join(lbl_str, file_name+".xml")
+
+        tree = ET.parse(xml_path) 
+        xml_root = tree.getroot() 
+
+        val = row.values
+        val= str(val)
+
+        file_id = val.replace("_PreviewData", "")
+        file_id = file_id.replace("['", "")
+        file_id = file_id.replace("']", "")
+        file_id = file_id + "_labels.jpg"
+
+        # ------------
+        tensor = torch.zeros(640, 512)
+        new_tensor = get_tensor_painted(xml_root, tensor, file_id)
+        new_tensor = torch.transpose(new_tensor, 0,1)
+        image = tensor_to_image(new_tensor)
+
+
+
+        image.save("labels_ss/"+file_id)
+
+        # if index == 0:
+        #    break
+
+
+def main():
+    get_images()
 
 
     print("yay")
