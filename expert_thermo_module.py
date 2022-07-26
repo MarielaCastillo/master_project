@@ -30,7 +30,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         self.transform_thermo = transform
         self.criterion = nn.CrossEntropyLoss()
 
-        self.cnnexpert = UNetExpert1(inchannels=1, numclasses=13)
+        self.cnnexpert = UNetExpert1(inchannels=1, numclasses=5)
 
     def forward(self, x1):
         _, output = self.cnnexpert(x1)
