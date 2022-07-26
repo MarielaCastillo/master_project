@@ -38,6 +38,8 @@ def main():
 
     checkpoint_callback = ModelCheckpoint(dirpath='models_with_pretrained_experts/')
     trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
+
+    # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
     model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                      model1=expert_rgb, model2=expert_thermo)
     trainer.fit(model)

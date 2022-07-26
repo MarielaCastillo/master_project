@@ -132,11 +132,20 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     def test_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
+        dir_path3 = dir_path + '/' + 'align'
 
+        '''
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
                                         thermo_path = dir_path2 + '/' + 'fl_ir_aligned',
                                         label_path= dir_path2 + '/' + 'fl_rgb_labels',
                                         transform_rgb= self.transform_rgb)  
+        '''
+        
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #label_path=dir_path + '/' + 'labels_ss',
+                                     label_path=dir_path + '/' + 'labels_npy',
+                                     transform_rgb=self.transform_rgb)         
 
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
                                             shuffle=True, num_workers=4)   

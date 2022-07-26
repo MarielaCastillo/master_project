@@ -10,7 +10,8 @@ def main():
     transform_thermo = transforms.Compose(
         [torch.tensor,
          ScaleThermal(max_value=30000),
-         transforms.Resize((320, 960)),
+         # transforms.Resize((320, 960)),
+         transforms.Resize((512, 640)),
          transforms.Normalize((0.5,), (0.5,))])
 
     model = LitModelEfficientNetThermo.load_from_checkpoint(batch_size=1,
