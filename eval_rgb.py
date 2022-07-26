@@ -11,10 +11,11 @@ def main():
          transforms.Normalize((0.5,), (0.5,))])
 
     model = LitModelEfficientNetRgb.load_from_checkpoint(batch_size=1,
-                                                         checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
+                                                         # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
+                                                         checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",
                                                          transform=transform_rgb)
     model.eval()
-    trainer = Trainer(gpu=3, max_epochs=1)
+    trainer = Trainer(gpus=1, max_epochs=1)
     # trainer = Trainer(accelerator="cpu", max_epochs=2)
     trainer.test(model=model)
 

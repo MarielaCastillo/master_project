@@ -113,9 +113,13 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             plt.show()
 
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
-            pred = pred * 255 / pred.max()
-            plt.imshow(pred[0])
-            plt.show()
+            if pred.max() != 0:
+                pred = pred * 255 / pred.max()
+            else:
+                pred = 0
+            plt.imsave("eval_thermo_", pred[0], format='png')
+            # plt.imshow(pred[0])
+            # plt.show()
 
         loss = self.criterion(outputs, labels.long())
         # loss = F.mse_loss(predicted, labels)

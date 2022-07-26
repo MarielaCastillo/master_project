@@ -20,13 +20,13 @@ def main():
         transforms.Resize((512, 640)),
         transforms.Normalize((0.5,), (0.5,))])
     
-    model = LitModelEfficientNetRgb(4, transform_rgb)  # batch_size
+    model = LitModelEfficientNetRgb(1, transform_rgb)  # batch_size
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_rgb/')
 
     tb_logger = pl_loggers.TensorBoardLogger(save_dir="logs/")
 
-    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
-    # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
+    # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
+    trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], auto_lr_find=True)
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)
 
