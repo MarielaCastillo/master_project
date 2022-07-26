@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 from skimage import io
 from torch.utils.data import Dataset
+import torchmetrics
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,19 +24,25 @@ class MultiModalDataset2(Dataset):
         thermo_path = os.path.join(self.files_path, self.annotations.iloc[index, 0]+".jpeg")
         img_thermo = io.imread(thermo_path)
 
-        file_name = self.annotations.iloc[index, 0].replace("PreviewData", "")
+        file_name = self.annotations.iloc[index, 0].replace("_PreviewData", "")
 
-        rgb_path = os.path.join(self.files_path, file_name+"RGB.jpg")
+        rgb_path = os.path.join(self.files_path, file_name+"_RGB.jpg")
         img_rgb = io.imread(rgb_path)
 
-        lbl_path = os.path.join(self.labels_path, file_name+"labels.jpg")
-        label = io.imread(lbl_path)
+        #lbl_path = os.path.join(self.labels_path, file_name+"_labels.jpg")
+        #label = io.imread(lbl_path)
+
+        ndarray_from_file=np.load(self.labels_path+"/"+file_name+".npy")
+        #label = torch.from_numpy(ndarray_from_file)
+        #print(torch.unique(label))
+
 
         if self.transform_rgb:
             img_rgb = self.transform_rgb(img_rgb)
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
 
+        return img_rgb, img_thermo, ndarray_from_file
         return img_rgb, img_thermo, label
 
 
@@ -87,11 +94,14 @@ class UNetExpert1(nn.Module):
 
 # ###Model
 class LitModelEfficientNetRgb(pl.LightningModule):
-    def __init__(self, batch_size, transform):
+    def __init__(self, batch_size, transform, lr = 0.001):
         super(LitModelEfficientNetRgb, self).__init__()
         self.batch_size = batch_size
         self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
+        self.learning_rate = lr
+
+        self.accuracy = torchmetrics.Accuracy()
 
         self.cnnexpert = UNetExpert1(inchannels=3, numclasses=5)
 
@@ -111,7 +121,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     label_path=dir_path + '/' + 'labels_ss',
+                                     #label_path=dir_path + '/' + 'labels_ss',
+                                     label_path=dir_path + '/' + 'labels_npy',
                                      transform_rgb=self.transform_rgb)  
         #'''       
 
@@ -133,7 +144,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     ### optimizers and schedulers
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
+        # optimizer = torch.optim.SGD(self.parameters(), lr=0.001, momentum=0.9)
+        optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9)
         return optimizer
 
     def training_step(self, train_batch):
@@ -148,10 +160,24 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             plt.imshow(pred[0])
             plt.show()
 
-        print(torch.unique(labels))
+        #print(torch.unique(labels))
 
         loss = self.criterion(outputs, labels.long())
+
+        # log step metric
+        # self.accuracy(outputs, labels)
+        # self.log('train_acc_step', self.accuracy)
+        # https://torchmetrics.readthedocs.io/en/stable/pages/lightning.html
+
+        # values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
+        # values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
+        # self.log_dict(values)
+
         return loss
+
+    def training_epoch_end(self, outs):
+        # log epoch metric
+        self.log('train_acc_epoch', self.accuracy)
 
     def test_step(self, test_batch, batch_idx):
         viz_pred = True
