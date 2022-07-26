@@ -78,7 +78,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
                                         
         testloader = torch.utils.data.DataLoader(testset,
                                                  batch_size=self.batch_size,
-                                                 shuffle=True, num_workers=3)
+                                                 shuffle=False, num_workers=3)
         return testloader
 
     # ## optimizers and schedulers

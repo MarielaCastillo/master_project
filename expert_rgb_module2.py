@@ -88,7 +88,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
                                     transform_rgb=self.transform_rgb)
 
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                                 shuffle=True, num_workers=4)
+                                                 shuffle=False, num_workers=4)
         return testloader
 
     # ## optimizers and schedulers

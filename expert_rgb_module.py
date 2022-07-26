@@ -148,7 +148,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
                                      transform_rgb=self.transform_rgb)         
 
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
-                                            shuffle=True, num_workers=4)   
+                                            shuffle=False, num_workers=4)   
         return testloader
 
     ### optimizers and schedulers
@@ -207,7 +207,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
                 pred = pred * 255 / pred.max()
             else:
                 pred = 0
-            plt.imsave("eval_rgb_", pred[0], format='png')
+
+            plt.imsave("eval_rgb_"+str(batch_idx), pred[0], format='png')
             # plt.imshow(pred[0])
             # plt.show()
 
