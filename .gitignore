@@ -136,3 +136,5 @@ thermaldatasetfolder/
 checkpoints_rgb
 checkpoints_thermo
 align/
+labels_ss/
+labels_ss2/
