@@ -70,10 +70,10 @@ class LitModelEfficientNetThermo(pl.LightningModule):
                                     transform_thermo=self.transform_thermo)
         '''
 
-        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
-                                     label_path=dir_path + '/' + 'labels_npy',
+                                     label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_thermo=self.transform_thermo)         
                                         
         testloader = torch.utils.data.DataLoader(testset,
@@ -117,7 +117,9 @@ class LitModelEfficientNetThermo(pl.LightningModule):
                 pred = pred * 255 / pred.max()
             else:
                 pred = 0
-            plt.imsave("eval_thermo_", pred[0], format='png')
+
+            plt.imsave("eval_rgb.png", pred[0])
+            # plt.imsave("eval_thermo_", pred[0], format='png')
             # plt.imshow(pred[0])
             # plt.show()
 

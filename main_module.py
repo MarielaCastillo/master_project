@@ -66,9 +66,9 @@ class LitModelEfficientNetFull(pl.LightningModule):
                                      transform_thermo=self.transform_thermo)
         '''                             
 
-        trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+        trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     label_path=dir_path + '/' + 'labels_npy',
+                                     label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb,
                                      transform_thermo=self.transform_thermo)  
 

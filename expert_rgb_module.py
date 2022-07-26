@@ -144,7 +144,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
-                                     label_path=dir_path + '/' + 'labels_npy',
+                                     label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb)         
 
         testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
@@ -198,8 +198,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         if viz_pred:
             # Labels
             lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
-            plt.imshow(lbl[0])
-            plt.show()
+            # plt.imshow(lbl[0])
+            #plt.show()
 
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
@@ -208,7 +208,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             else:
                 pred = 0
 
-            plt.imsave("eval_rgb_", pred[0], format='png')
+            plt.imsave("eval_label.png", lbl)
+            plt.imsave("eval_rgb.png", pred[0])
             # plt.imshow(pred[0])
             # plt.show()
 

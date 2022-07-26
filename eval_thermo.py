@@ -18,7 +18,7 @@ def main():
                                                             checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
                                                             transform=transform_thermo)
     model.eval()
-    trainer = Trainer(gpu=1, max_epochs=1)
+    trainer = Trainer(gpus=1, max_epochs=1)
     # trainer = Trainer(accelerator="cpu", max_epochs=2)
     trainer.test(model=model)
 
