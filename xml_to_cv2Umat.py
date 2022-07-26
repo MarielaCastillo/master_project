@@ -136,10 +136,6 @@ def main():
     #tensor = transform(image)
 
     get_images()
-
-    #tensor_file=np.load(dir_path+"/labels_npy/FLIR_00258.npy")
-    #tensor = torch.from_numpy(tensor_file)
-    #print(torch.unique(tensor))
     
     print("yay")
 

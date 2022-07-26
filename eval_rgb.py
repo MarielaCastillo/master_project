@@ -13,7 +13,8 @@ def main():
                                                          checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
                                                          transform=transform_rgb)
     model.eval()
-    trainer = Trainer(accelerator="cpu", max_epochs=2)
+    trainer = Trainer(gpu=1, max_epochs=1)
+    # trainer = Trainer(accelerator="cpu", max_epochs=2)
     trainer.test(model=model)
 
 

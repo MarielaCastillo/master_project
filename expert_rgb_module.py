@@ -165,13 +165,15 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
 
         # log step metric
-        # self.accuracy(outputs, labels)
-        # self.log('train_acc_step', self.accuracy)
+        #self.accuracy(outputs, labels)
+        #self.log('train_acc_step', self.accuracy)
         # https://torchmetrics.readthedocs.io/en/stable/pages/lightning.html
 
-        # values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
-        # values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
-        # self.log_dict(values)
+        #values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
+        #values = {"loss": loss}  # add more items if needed
+        #self.log_dict(values)
+
+        self.log("my_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         return loss
 
