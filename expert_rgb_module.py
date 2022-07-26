@@ -141,7 +141,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
                                         transform_rgb= self.transform_rgb)  
         '''
         
-        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
@@ -208,7 +208,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             else:
                 pred = 0
 
-            plt.imsave("eval_rgb_"+str(batch_idx), pred[0], format='png')
+            plt.imsave("eval_rgb_", pred[0], format='png')
             # plt.imshow(pred[0])
             # plt.show()
 
