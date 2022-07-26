@@ -28,7 +28,7 @@ class MultiModalDataset2(Dataset):
         rgb_path = os.path.join(self.files_path, file_name+"RGB.jpg")
         img_rgb = io.imread(rgb_path)
 
-        lbl_path = os.path.join(self.labels_path, file_name+"mask.jpg")
+        lbl_path = os.path.join(self.labels_path, file_name+"labels.jpg")
         label = io.imread(lbl_path)
 
         if self.transform_rgb:
@@ -93,7 +93,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
 
-        self.cnnexpert = UNetExpert1(inchannels=3, numclasses=80)
+        self.cnnexpert = UNetExpert1(inchannels=3, numclasses=5)
 
     def forward(self, x1): ### here1
         hiddenrgb, outrgb,  = self.cnnexpert(x1)
@@ -111,7 +111,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     label_path=dir_path3 + '/' + 'Annotations',
+                                     label_path=dir_path + '/' + 'labels_ss',
                                      transform_rgb=self.transform_rgb)  
         #'''       
 
