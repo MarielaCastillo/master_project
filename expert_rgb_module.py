@@ -101,7 +101,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = lr
 
-        self.accuracy = torchmetrics.Accuracy()
+        # self.accuracy = torchmetrics.Accuracy()
 
         self.cnnexpert = UNetExpert1(inchannels=3, numclasses=5)
 
@@ -186,9 +186,9 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         return loss
 
-    def training_epoch_end(self, outs):
+    # def training_epoch_end(self, outs):
         # log epoch metric
-        self.log('train_acc_epoch', self.accuracy)
+        # self.log('train_acc_epoch', self.accuracy)
 
     def test_step(self, test_batch, batch_idx):
         viz_pred = True
