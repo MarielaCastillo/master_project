@@ -5,6 +5,8 @@ import PIL.Image
 import torch
 import xml.etree.ElementTree as ET 
 
+import torchvision.transforms as transforms
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -76,11 +78,12 @@ def get_images():
         file_id = val.replace("_PreviewData", "")
         file_id = file_id.replace("['", "")
         file_id = file_id.replace("']", "")
-        file_id = file_id + "_labels.jpg"
+
+        file_id_jpg = file_id + "_labels.jpg"
 
         # ------------
         tensor = torch.zeros(640, 512)
-        new_tensor = get_tensor_painted(xml_root, tensor, file_id)
+        new_tensor = get_tensor_painted(xml_root, tensor, file_id_jpg)
         new_tensor = torch.transpose(new_tensor, 0,1)
         image = tensor_to_image(new_tensor)
 
@@ -89,12 +92,57 @@ def get_images():
         # if index == 0:
         #    break
 
+def get_npys():
+    # define folders and file
+    dir_path3 = dir_path + '/' + 'align'
+    txt_file = dir_path3 + '/' + 'align_train.txt'
+    label_path=dir_path3 + '/' + 'Annotations'
+
+    # get path of the xml file
+    file_names = pd.read_csv(txt_file, sep=" ", header=None)
+    lbl_str = ''.join(label_path)  #change tuple to str
+
+    for index, row in file_names.iterrows():
+        file_name = file_names.loc[index, 0].replace(" ", "")
+        xml_path = os.path.join(lbl_str, file_name+".xml")
+
+        tree = ET.parse(xml_path) 
+        xml_root = tree.getroot() 
+
+        val = row.values
+        val= str(val)
+
+        file_id = val.replace("_PreviewData", "")
+        file_id = file_id.replace("['", "")
+        file_id = file_id.replace("']", "")
+
+        file_id_jpg = file_id + "_labels.jpg"
+
+        # ------------
+        tensor = torch.zeros(640, 512)
+        new_tensor = get_tensor_painted(xml_root, tensor, file_id_jpg)
+        new_tensor = torch.transpose(new_tensor, 0,1)
+        image = tensor_to_image(new_tensor)
+
+        np.save("labels_npy/"+file_id, new_tensor)
+
 
 def main():
+    #image = get_images()
+    ## Define a transform to convert the image to tensor
+    #transform = transforms.ToTensor()
+
+    ## Convert the image to PyTorch tensor
+    #tensor = transform(image)
+
     get_images()
+
+    #tensor_file=np.load(dir_path+"/labels_npy/FLIR_00258.npy")
+    #tensor = torch.from_numpy(tensor_file)
+    #print(torch.unique(tensor))
+    
     print("yay")
 
 
 if __name__ == "__main__":
     main()
-    
