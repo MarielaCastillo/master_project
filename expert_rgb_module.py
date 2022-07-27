@@ -207,7 +207,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             if pred.max() != 0:
                 pred = pred * 255 / pred.max()
             else:
-                pred = 0
+                pred = pred * 0
 
             plt.imsave("eval_label_rgb.png", lbl[0])
             plt.imsave("eval_pred_rgb.png", pred[0])

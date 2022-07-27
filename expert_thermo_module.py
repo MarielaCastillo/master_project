@@ -116,7 +116,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             if pred.max() != 0:
                 pred = pred * 255 / pred.max()
             else:
-                pred = 0
+                pred = pred * 0
             
             plt.imsave("eval_label_thermo.png", lbl[0])
             plt.imsave("eval_pred_thermo.png", pred[0])
