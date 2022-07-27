@@ -73,7 +73,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
                                      transform_thermo=self.transform_thermo)  
 
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=self.batch_size,
-                                                  shuffle=True, num_workers=10)  # 2
+                                                  shuffle=True, num_workers=0)  # 2
         return trainloader
 
     def test_dataloader(self):
