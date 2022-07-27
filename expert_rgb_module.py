@@ -41,10 +41,11 @@ class MultiModalDataset2(Dataset):
             img_rgb = self.transform_rgb(img_rgb)
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
+            img_thermo = img_thermo[0].unsqueeze(dim=0)
+        
 
         return img_rgb, img_thermo, ndarray_from_file
-        return img_rgb, img_thermo, label
-
+        # return img_rgb, img_thermo, label
 
     def __len__(self):
         return len(self.annotations)
@@ -210,6 +211,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
             plt.imsave("eval_label.png", lbl[0])
             plt.imsave("eval_rgb.png", pred[0])
+            
+            viz_pred = False
             # plt.imshow(pred[0])
             # plt.show()
 

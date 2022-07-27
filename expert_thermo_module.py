@@ -127,3 +127,4 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         # loss = F.mse_loss(predicted, labels)
 
         return loss
+        
