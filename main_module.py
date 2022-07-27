@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 # from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
@@ -89,9 +90,9 @@ class LitModelEfficientNetFull(pl.LightningModule):
                                     transform_thermo=self.transform_thermo)
         '''
 
-        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                      file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     label_path=dir_path + '/' + 'labels_npy',
+                                     label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb,
                                      transform_thermo=self.transform_thermo) 
 
@@ -114,11 +115,30 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
     def test_step(self, test_batch, dataloader_idx):
         # check this
+        viz_pred = True
         input_rgb, input_thermo, labels = test_batch
         labels = labels.long()
 
         outputs = self(input_rgb, input_thermo)
         loss = self.criterion(outputs, labels)
+
+        if viz_pred:
+            # Labels
+            lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
+            # plt.imshow(lbl[0])
+            #plt.show()
+
+            # Prediction
+            pred = outputs.argmax(axis=1).detach().cpu().numpy()
+            if pred.max() != 0:
+                pred = pred * 255 / pred.max()
+            else:
+                pred = pred * 0
+
+            plt.imsave("eval_label_rgb.png", lbl[0])
+            plt.imsave("eval_pred_rgb.png", pred[0])
+            
+            viz_pred = False
 
         # _, predicted = torch.max(outputs.data, 1)
         # loss = F.cross_entropy(predicted, labels)
