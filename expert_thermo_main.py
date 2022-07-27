@@ -27,11 +27,11 @@ def main():
         transforms.Normalize((0.5,), (0.5,))])
     
 
-    model = LitModelEfficientNetThermo(1, transform_thermo)
+    model = LitModelEfficientNetThermo(4, transform_thermo)
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_thermo/')
 
-    # trainer = Trainer(gpus=1, max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
+    # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
     trainer.fit(model)
 
 
