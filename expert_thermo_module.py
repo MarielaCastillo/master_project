@@ -118,8 +118,8 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             else:
                 pred = pred * 0
             
-            plt.imsave("eval_label_thermo.png", lbl[0])
-            plt.imsave("eval_pred_thermo.png", pred[0])
+            plt.imsave("thermo_eval_label.png", lbl[0])
+            plt.imsave("thermo_eval_pred.png", pred[0])
 
             # plt.imsave("eval_thermo_", pred[0], format='png')
             # plt.imshow(pred[0])

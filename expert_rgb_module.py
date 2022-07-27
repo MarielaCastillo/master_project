@@ -174,6 +174,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
+        logs={"train_loss": loss}
+
         # log step metric
         #self.accuracy(outputs, labels)
         #self.log('train_acc_step', self.accuracy)
@@ -184,6 +186,10 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         #self.log_dict(values)
 
         self.log("my_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        #     tensorboard_logs = {'loss': avg_loss,"Accuracy": correct/total}  # to paste in page
+        # https://www.pytorchlightning.ai/blog/tensorboard-with-pytorch-lightning
+        tensorboard_logs = {'loss': logs,"Accuracy": correct/total}
 
         return loss
 
@@ -209,8 +215,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             else:
                 pred = pred * 0
 
-            plt.imsave("eval_label_rgb.png", lbl[0])
-            plt.imsave("eval_pred_rgb.png", pred[0])
+            plt.imsave("rgb_eval_label.png", lbl[0])
+            plt.imsave("rgb_eval_pred.png", pred[0])
             
             viz_pred = False
             # plt.imshow(pred[0])
