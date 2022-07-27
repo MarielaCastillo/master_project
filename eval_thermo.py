@@ -16,8 +16,7 @@ def main():
 
     model = LitModelEfficientNetThermo.load_from_checkpoint(batch_size=1,
                                                             # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
-                                                            # checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt", 
-                                                            checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",  # RGB as a test
+                                                            checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt", 
                                                             transform=transform_thermo)
     model.eval()
     trainer = Trainer(gpus=1, max_epochs=1)
