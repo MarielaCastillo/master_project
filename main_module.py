@@ -24,6 +24,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         self.cnnexpertThermo = model2
         
         encoder_channels = list(self.cnnexpertRGB.model.encoder.out_channels)
+        #encoder_channels = (3, 48, 32, 56, 160, 448)
         encoder_channels = [2 * a for a in encoder_channels]
         decoder_channels = (256, 128, 64, 32, 16)
         self.decoder = UnetDecoder(
@@ -111,7 +112,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         loss = self.criterion(outputs, labels)
         return loss
 
-    def test_step(self, test_batch):
+    def test_step(self, test_batch, dataloader_idx):
         # check this
         input_rgb, input_thermo, labels = test_batch
         labels = labels.long()
