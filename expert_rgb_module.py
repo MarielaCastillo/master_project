@@ -209,8 +209,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             else:
                 pred = 0
 
-            plt.imsave("eval_label.png", lbl[0])
-            plt.imsave("eval_rgb.png", pred[0])
+            plt.imsave("eval_label_rgb.png", lbl[0])
+            plt.imsave("eval_pred_rgb.png", pred[0])
             
             viz_pred = False
             # plt.imshow(pred[0])

@@ -109,16 +109,18 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
         if viz_pred:
             lbl = labels.detach().cpu().numpy()
-            plt.imshow(lbl[0])
-            plt.show()
+            # plt.imshow(lbl[0])
+            # plt.show()
 
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
             if pred.max() != 0:
                 pred = pred * 255 / pred.max()
             else:
                 pred = 0
+            
+            plt.imsave("eval_label_thermo.png", lbl[0])
+            plt.imsave("eval_pred_thermo.png", pred[0])
 
-            plt.imsave("eval_rgb.png", pred[0])
             # plt.imsave("eval_thermo_", pred[0], format='png')
             # plt.imshow(pred[0])
             # plt.show()
