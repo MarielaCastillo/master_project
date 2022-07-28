@@ -11,10 +11,7 @@ from torch.utils.data import Dataset
 # import torchmetrics
 from torchmetrics.functional import accuracy
 
-
-
-
-from tensorboard_evaluation import Evaluation
+# from tensorboard_evaluation import Evaluation
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -108,7 +105,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = lr
         
-        self.tensorboard_eval = Evaluation(dir_path, name="imitation learning", stats=["training loss", "training accuracy", "validation_loss", "validation accuracy"], )
+        # self.tensorboard_eval = Evaluation(dir_path, name="imitation learning", stats=["training loss", "training accuracy", "validation_loss", "validation accuracy"], )
 
         # self.accuracy = torchmetrics.Accuracy()
 
@@ -182,7 +179,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
-        self.tensorboard_eval.write_episode_data(episode=batch_idx, eval_dict = {"training loss" : loss.item()})
+        # self.tensorboard_eval.write_episode_data(episode=batch_idx, eval_dict = {"training loss" : loss.item()})
         # self.tensorboard_eval.write_episode_data(episode=step, eval_dict={"training accuracy": accuracy})
 
         self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
