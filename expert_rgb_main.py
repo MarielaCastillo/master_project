@@ -6,9 +6,11 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 from pytorch_lightning import loggers as pl_loggers
 
-from expert_rgb_module import LitModelEfficientNetRgb
-# from expert_rgb_module2 import LitModelEfficientNetRgb
+from pytorch_lightning.loggers import TensorBoardLogger
 
+
+
+from expert_rgb_module import LitModelEfficientNetRgb
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -23,10 +25,10 @@ def main():
     model = LitModelEfficientNetRgb(4, transform_rgb)  # batch_size
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_rgb/')
 
-    tb_logger = pl_loggers.TensorBoardLogger(save_dir="logs/")
+    logger = TensorBoardLogger("tb_logs", name="my_model")
 
     # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], auto_lr_find=True)
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)

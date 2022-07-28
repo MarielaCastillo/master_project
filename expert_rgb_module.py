@@ -8,7 +8,11 @@ import torch
 import torch.nn as nn
 from skimage import io
 from torch.utils.data import Dataset
-import torchmetrics
+# import torchmetrics
+from torchmetrics.functional import accuracy
+
+
+from tensorboard_evaluation import Evaluation
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -101,6 +105,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = lr
+        
+        self.tensorboard_eval = Evaluation(dir_path, name="imitation learning", stats=["training loss", "training accuracy", "validation_loss", "validation accuracy"], )
 
         # self.accuracy = torchmetrics.Accuracy()
 
@@ -158,10 +164,12 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         optimizer = torch.optim.SGD(self.parameters(), lr=self.learning_rate, momentum=0.9)
         return optimizer
 
-    def training_step(self, train_batch):
+    def training_step(self, train_batch, batch_idx):
         viz_pred = False
         input_rgb, _, labels, file_name = train_batch
         #optimizer.zero_grad()
+
+        
 
         outputs = self(input_rgb)
         if viz_pred:
@@ -170,26 +178,12 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             plt.imshow(pred[0])
             plt.show()
 
-        #print(torch.unique(labels))
-
         loss = self.criterion(outputs, labels.long())
 
-        logs={"train_loss": loss}
+        self.tensorboard_eval.write_episode_data(episode=batch_idx, eval_dict = {"training loss" : loss.item()})
+        # self.tensorboard_eval.write_episode_data(episode=step, eval_dict={"training accuracy": accuracy})
 
-        # log step metric
-        #self.accuracy(outputs, labels)
-        #self.log('train_acc_step', self.accuracy)
-        # https://torchmetrics.readthedocs.io/en/stable/pages/lightning.html
-
-        #values = {"loss": loss, "acc": acc, "metric_n": metric_n}  # add more items if needed
-        #values = {"loss": loss}  # add more items if needed
-        #self.log_dict(values)
-
-        self.log("my_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-
-        #     tensorboard_logs = {'loss': avg_loss,"Accuracy": correct/total}  # to paste in page
-        # https://www.pytorchlightning.ai/blog/tensorboard-with-pytorch-lightning
-        # tensorboard_logs = {'loss': logs,"Accuracy": correct/total}
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         return loss
 
@@ -226,5 +220,11 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             # plt.show()
 
         loss = self.criterion(outputs, labels.long())
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"val_acc": acc, "val_loss": loss}
+        self.log_dict(metrics)
+
+        # self.tensorboard_eval.write_episode_data(episode=epoch, eval_dict={"validation accuracy": val_accuracy})
 
         return loss
