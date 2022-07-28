@@ -157,11 +157,11 @@ class LitModelEfficientNetFull(pl.LightningModule):
             else:
                 pred = pred * 0
 
-            # plt.imsave("full_eval_label.png", lbl[0])
-            # plt.imsave("full_eval_pred.png", pred[0])
-
-            plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
+            # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
+            # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
+            
+            plt.imsave(file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave(file_name[0]+"_eval_pred_full.png", pred[0])
             
             viz_pred = False
 

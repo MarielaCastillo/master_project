@@ -38,10 +38,10 @@ def main():
     expert_rgb = model_rgb.cnnexpert
     expert_thermo = model_thermo.cnnexpert
 
-    checkpoint_callback = ModelCheckpoint(dirpath='models_with_pretrained_experts/')
+    checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_full/')
     
     # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
+    trainer = Trainer(gpus=3, max_epochs=1, callbacks=[checkpoint_callback])
 
     model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                      model1=expert_rgb, model2=expert_thermo)
