@@ -3,10 +3,10 @@ import torch
 from pytorch_lightning import Trainer
 import torchvision.transforms as transforms
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from expert_thermo_module import LitModelEfficientNetThermo
 from expert_thermo_module import ScaleThermal
-
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -30,8 +30,10 @@ def main():
     model = LitModelEfficientNetThermo(4, transform_thermo)
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_thermo/')
 
-    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
-    # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
+    logger = TensorBoardLogger("tb_logs", name="expert_thermo")
+
+    # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
     trainer.fit(model)
 
 

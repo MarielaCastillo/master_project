@@ -4,8 +4,8 @@ from expert_rgb_module import LitModelEfficientNetRgb
 from expert_thermo_module import LitModelEfficientNetThermo
 from main_module import LitModelEfficientNetFull
 import torchvision.transforms as transforms
-
 from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from expert_thermo_module import ScaleThermal
 
@@ -39,19 +39,15 @@ def main():
     expert_thermo = model_thermo.cnnexpert
 
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_full/')
+
+    logger = TensorBoardLogger("tb_logs", name="full")
     
-    # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(gpus=3, max_epochs=1, callbacks=[checkpoint_callback])
+    # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
 
     model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                      model1=expert_rgb, model2=expert_thermo)
     trainer.fit(model)
-
-    # trainer = Trainer(gpus=1, max_epochs=2)
-    # trainer = Trainer(accelerator="cpu",max_epochs=2, default_root_dir=dir_path+ '/' + 'models')
-
-    # trainer.save_checkpoint("best_model.ckpt")
-    # torch.save(model.state_dict(), dir_path+ '/' + 'models/model.pt')
 
 
 if __name__ == "__main__":
