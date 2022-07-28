@@ -12,6 +12,8 @@ from torch.utils.data import Dataset
 from torchmetrics.functional import accuracy
 
 
+
+
 from tensorboard_evaluation import Evaluation
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -183,7 +185,11 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         self.tensorboard_eval.write_episode_data(episode=batch_idx, eval_dict = {"training loss" : loss.item()})
         # self.tensorboard_eval.write_episode_data(episode=step, eval_dict={"training accuracy": accuracy})
 
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"train_acc": acc, "train_loss": loss}
+        self.log_dict(metrics)
 
         return loss
 

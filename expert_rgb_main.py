@@ -28,10 +28,16 @@ def main():
     logger = TensorBoardLogger("tb_logs", name="my_model")
 
     # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+    
+    # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], auto_lr_find=True)
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)
+
+
+    # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
 
     '''
     fig = lr_finder.plot(suggest=True)
