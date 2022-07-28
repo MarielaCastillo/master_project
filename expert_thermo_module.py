@@ -2,13 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
-from torch.utils.data import Dataset
-from expert_rgb_module import UNetExpert1
+import matplotlib.pyplot as plt
+from torchmetrics.functional import accuracy
 
+from expert_rgb_module import UNetExpert1
 from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
 
-import matplotlib.pyplot as plt
+
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -98,6 +99,13 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             plt.show()
 
         loss = self.criterion(outputs, labels.long())
+
+        self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"train_acc": acc, "train_loss": loss}
+        self.log_dict(metrics)
+
         return loss
 
     def test_step(self, test_batch, batch_idx):
@@ -129,6 +137,11 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             # plt.show()
 
         loss = self.criterion(outputs, labels.long())
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"val_acc": acc, "val_loss": loss}
+        self.log_dict(metrics)
+
         # loss = F.mse_loss(predicted, labels)
 
         return loss

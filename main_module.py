@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-# from expert_rgb_module import MultiModalDataset
-from expert_rgb_module import MultiModalDataset2
-
+from torchmetrics.functional import accuracy
 from segmentation_models_pytorch.unet.decoder import UnetDecoder
 from segmentation_models_pytorch.base.heads import SegmentationHead
+
+# from expert_rgb_module import MultiModalDataset
+from expert_rgb_module import MultiModalDataset2
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -133,6 +134,13 @@ class LitModelEfficientNetFull(pl.LightningModule):
         outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
         print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
         loss = self.criterion(outputs, labels)
+
+        self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"train_acc": acc, "train_loss": loss}
+        self.log_dict(metrics)
+
         return loss
 
     def test_step(self, test_batch, dataloader_idx):
@@ -167,5 +175,10 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
         # _, predicted = torch.max(outputs.data, 1)
         # loss = F.cross_entropy(predicted, labels)
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"val_acc": acc, "val_loss": loss}
+        self.log_dict(metrics)
+
 
         return loss
