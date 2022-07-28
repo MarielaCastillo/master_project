@@ -26,7 +26,8 @@ def main():
     tb_logger = pl_loggers.TensorBoardLogger(save_dir="logs/")
 
     # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
-    trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
+    trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)
+    # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], auto_lr_find=True)
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], logger=tb_logger)
 
