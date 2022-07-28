@@ -48,13 +48,34 @@ class LitModelEfficientNetFull(pl.LightningModule):
         hidden_states_depth, outdepth = self.cnnexpertThermo(x2)
 
         input_gating = []
+
         for hidden_state_rgb, hidden_state_depth in zip(hidden_states_rgb, hidden_states_depth):
             input_gating.append(torch.cat([hidden_state_rgb, hidden_state_depth], dim=1))
         gating = self.decoder(*input_gating)
         gating = self.head(gating)
         outfinal = gating[:, 0] * outrgb + gating[:, 1] * outdepth
 
-        return outfinal
+        boolean_tensor = gating[:,0] < gating[:,1]
+        gating_rgb_count = torch.numel(gating[:,0])  # 512*640 = 327680
+        # gating_thermo_count = torch.numel(gating[:,1])  # 512*640 = 327680
+        # total_elements = gating_rgb_count + gating_thermo_count  # 655360 (512*640 + 512*640)
+
+        total_elements = gating_rgb_count  # could be rgb or thermo, since they have the same size. 
+
+        is_rgb_better = gating[:,0] > gating[:,1]
+        rgb_better = torch.count_nonzero(is_rgb_better)
+
+        is_thermo_better = gating[:,0] < gating[:,1]
+        thermo_better = torch.count_nonzero(is_thermo_better)
+
+        percentage_rgb = int(rgb_better)/total_elements * 100
+        percentage_thermo= int(thermo_better)/total_elements * 100
+
+        return outfinal, percentage_rgb, percentage_thermo
+
+        # contador rgb, contador thermo y %
+        # guardar un ejemplo donde ganoo rgb y otra de thermo
+        # poner nombre de la imagen si se puede
 
     def train_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
@@ -106,17 +127,18 @@ class LitModelEfficientNetFull(pl.LightningModule):
         return optimizer
     
     def training_step(self, train_batch):
-        input_rgb, input_thermo, labels = train_batch
+        input_rgb, input_thermo, labels, file_name = train_batch
         labels = labels.long()
 
-        outputs = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
+        print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
         loss = self.criterion(outputs, labels)
         return loss
 
     def test_step(self, test_batch, dataloader_idx):
         # check this
         viz_pred = True
-        input_rgb, input_thermo, labels = test_batch
+        input_rgb, input_thermo, labels, file_name = test_batch
         labels = labels.long()
 
         outputs = self(input_rgb, input_thermo)

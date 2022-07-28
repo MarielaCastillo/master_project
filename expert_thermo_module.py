@@ -88,7 +88,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
     
     def training_step(self, train_batch, batch_idx):
         viz_pred = False
-        _, input_thermo, labels = train_batch
+        _, input_thermo, labels, file_name = train_batch
 
         outputs = self(input_thermo)
         if viz_pred:
@@ -102,7 +102,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
     def test_step(self, test_batch, batch_idx):
         viz_pred = True
-        _, images, labels = test_batch
+        _, images, labels, file_name = test_batch
         outputs = self(images)
     
         # _, predicted = torch.max(outputs.data, 1)

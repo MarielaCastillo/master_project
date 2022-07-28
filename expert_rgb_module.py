@@ -44,7 +44,7 @@ class MultiModalDataset2(Dataset):
             img_thermo = img_thermo[0].unsqueeze(dim=0)
         
 
-        return img_rgb, img_thermo, ndarray_from_file
+        return img_rgb, img_thermo, ndarray_from_file, file_name
         # return img_rgb, img_thermo, label
 
     def __len__(self):
@@ -160,7 +160,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     def training_step(self, train_batch):
         viz_pred = False
-        input_rgb, _, labels = train_batch
+        input_rgb, _, labels, file_name = train_batch
         #optimizer.zero_grad()
 
         outputs = self(input_rgb)
@@ -189,7 +189,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         #     tensorboard_logs = {'loss': avg_loss,"Accuracy": correct/total}  # to paste in page
         # https://www.pytorchlightning.ai/blog/tensorboard-with-pytorch-lightning
-        tensorboard_logs = {'loss': logs,"Accuracy": correct/total}
+        # tensorboard_logs = {'loss': logs,"Accuracy": correct/total}
 
         return loss
 
@@ -199,7 +199,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     def test_step(self, test_batch, batch_idx):
         viz_pred = True
-        images, _, labels = test_batch
+        images, _, labels, file_name = test_batch
         outputs = self(images)
 
         if viz_pred:
