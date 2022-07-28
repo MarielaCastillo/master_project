@@ -2,7 +2,7 @@ import torch
 from pytorch_lightning import Trainer
 from expert_rgb_module import LitModelEfficientNetRgb
 from expert_thermo_module import LitModelEfficientNetThermo
-from main_module import LitModelEfficientNetFull
+from full_module import LitModelEfficientNetFull
 import torchvision.transforms as transforms
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger

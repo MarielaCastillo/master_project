@@ -2,7 +2,7 @@ from pytorch_lightning import Trainer
 import torchvision.transforms as transforms
 from expert_rgb_module import LitModelEfficientNetRgb
 from expert_thermo_module import LitModelEfficientNetThermo
-from main_module import LitModelEfficientNetFull
+from full_module import LitModelEfficientNetFull
 
 
 def main():
