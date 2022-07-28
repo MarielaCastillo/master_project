@@ -20,6 +20,10 @@ class LitModelEfficientNetFull(pl.LightningModule):
         self.transform_rgb = transform_rgb
         self.transform_thermo = transform_thermo
 
+        self.count_rgb = 0
+        self.count_thermo = 0
+
+
         self.criterion = nn.CrossEntropyLoss()
 
         self.cnnexpertRGB = model1
@@ -132,13 +136,21 @@ class LitModelEfficientNetFull(pl.LightningModule):
         labels = labels.long()
 
         outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
-        print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
+        # print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
         loss = self.criterion(outputs, labels)
+
+
+
+        if perc_rgb > perc_thermo:
+            self.count_rgb = self.count_rgb + 1
+        else:
+            self.count_thermo = self.count_thermo + 1
 
         self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         acc = accuracy(outputs, labels.long())
-        metrics = {"train_acc": acc, "train_loss": loss}
+        metrics = {"train_acc": acc, "train_loss": loss, "count_rgb": self.count_rgb, 
+                                                      "count_thermo": self.count_thermo}
         self.log_dict(metrics)
 
         return loss
