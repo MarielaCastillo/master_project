@@ -28,17 +28,17 @@ def main():
         checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
         transform=transform_thermo)
 
-
-
+    chkpt_epochs = 1
 
     model = LitModelEfficientNetFull.load_from_checkpoint(batch_size=1,
                                                          # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
                                                          checkpoint_path="checkpoints_full/epoch=1-step=2026.ckpt",
                                                          transform_rgb=transform_rgb, transform_thermo=transform_thermo,
-                                                         model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert)
+                                                         model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
+                                                         checkpoint_epochs=str(chkpt_epochs))
     model.eval()
     trainer = Trainer(gpus=1, max_epochs=1)
-    # trainer = Trainer(accelerator="cpu", max_epochs=2)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1)
     trainer.test(model=model)
 
 

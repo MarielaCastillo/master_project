@@ -17,11 +17,12 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class LitModelEfficientNetFull(pl.LightningModule):
-    def __init__(self, batch_size, transform_rgb, transform_thermo, model1, model2):
+    def __init__(self, batch_size, transform_rgb, transform_thermo, model1, model2, checkpoint_epochs=""):
         super(LitModelEfficientNetFull, self).__init__()
         self.batch_size = batch_size
         self.transform_rgb = transform_rgb
         self.transform_thermo = transform_thermo
+        self.checkpoint_epochs = checkpoint_epochs
 
         self.count_rgb = 0
         self.count_thermo = 0
@@ -199,8 +200,8 @@ class LitModelEfficientNetFull(pl.LightningModule):
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
             
-            plt.imsave(file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave(file_name[0]+"_eval_pred_full.png", pred[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_zfull.png", pred[0])
             
             viz_pred = False
 
