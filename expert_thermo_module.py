@@ -4,6 +4,9 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import matplotlib.pyplot as plt
 from torchmetrics.functional import accuracy
+from torchmetrics import JaccardIndex
+from torchmetrics import Recall
+from torchmetrics import Precision
 
 from expert_rgb_module import UNetExpert1
 from expert_rgb_module import MultiModalDataset
@@ -100,10 +103,25 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels.long())
+
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels.long())
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels.long())
+
         self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         acc = accuracy(outputs, labels.long())
-        metrics = {"train_acc": acc, "train_loss": loss}
+        metrics = {"train_acc": acc, "train_loss": loss, "iou":iou,
+                                                        "recall": recall,
+                                                        "precision":precision
+                                                        }
         self.log_dict(metrics)
 
         return loss
@@ -138,11 +156,31 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
+        # loss = F.mse_loss(predicted, labels)
+
+
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels.long())
+
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels.long())
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels.long())
+
+        self.log("validation_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
         acc = accuracy(outputs, labels.long())
-        metrics = {"val_acc": acc, "val_loss": loss}
+        metrics = {"val_acc": acc, "val_loss": loss, "val_iou":iou,
+                                                        "val_recall": recall,
+                                                        "val_precision":precision
+                                                        }
         self.log_dict(metrics)
 
-        # loss = F.mse_loss(predicted, labels)
+
 
         return loss
         

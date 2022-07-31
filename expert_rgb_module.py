@@ -8,8 +8,11 @@ import torch
 import torch.nn as nn
 from skimage import io
 from torch.utils.data import Dataset
-# import torchmetrics
+
 from torchmetrics.functional import accuracy
+from torchmetrics import JaccardIndex
+from torchmetrics import Recall
+from torchmetrics import Precision
 
 # from tensorboard_evaluation import Evaluation
 
@@ -179,13 +182,27 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels.long())
+
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels.long())
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels.long())
+
         # self.tensorboard_eval.write_episode_data(episode=batch_idx, eval_dict = {"training loss" : loss.item()})
         # self.tensorboard_eval.write_episode_data(episode=step, eval_dict={"training accuracy": accuracy})
 
         self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         acc = accuracy(outputs, labels.long())
-        metrics = {"train_acc": acc, "train_loss": loss}
+        metrics = {"train_acc":acc, "train_loss":loss, "iou":iou,
+                                                        "recall": recall,
+                                                        "precision":precision}
         self.log_dict(metrics)
 
         return loss
@@ -224,10 +241,26 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
         loss = self.criterion(outputs, labels.long())
 
-        acc = accuracy(outputs, labels.long())
-        metrics = {"val_acc": acc, "val_loss": loss}
-        self.log_dict(metrics)
-
         # self.tensorboard_eval.write_episode_data(episode=epoch, eval_dict={"validation accuracy": val_accuracy})
 
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels.long())
+
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels.long())
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels.long())
+
+        self.log("validation_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        acc = accuracy(outputs, labels.long())
+        metrics = {"val_acc": acc, "val_loss": loss, "val_iou":iou,
+                                                        "val_recall": recall,
+                                                        "val_precision":precision
+                                                        }
+        self.log_dict(metrics)
         return loss
