@@ -101,12 +101,13 @@ class UNetExpert1(nn.Module):
 
 # ###Model
 class LitModelEfficientNetRgb(pl.LightningModule):
-    def __init__(self, batch_size, transform, lr = 0.001):
+    def __init__(self, batch_size, transform, lr = 0.001, checkpoint_epochs=""):
         super(LitModelEfficientNetRgb, self).__init__()
         self.batch_size = batch_size
         self.transform_rgb = transform
         self.criterion = nn.CrossEntropyLoss()
         self.learning_rate = lr
+        self.checkpoint_epochs = checkpoint_epochs
         
         # self.tensorboard_eval = Evaluation(dir_path, name="imitation learning", stats=["training loss", "training accuracy", "validation_loss", "validation accuracy"], )
 
@@ -232,8 +233,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             # plt.imsave("eval_rgb/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_rgb/"+file_name[0]+"_eval_pred_rgb.png", pred[0])
 
-            plt.imsave(file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave(file_name[0]+"_eval_pred_rgb.png", pred[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_rgb.png", pred[0])
             
             viz_pred = False
             # plt.imshow(pred[0])

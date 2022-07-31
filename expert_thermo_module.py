@@ -28,11 +28,12 @@ class ScaleThermal:
 
 # ###Model
 class LitModelEfficientNetThermo(pl.LightningModule):
-    def __init__(self, batch_size, transform):
+    def __init__(self, batch_size, transform, checkpoint_epochs=""):
         super(LitModelEfficientNetThermo, self).__init__()
         self.batch_size = batch_size
         self.transform_thermo = transform
         self.criterion = nn.CrossEntropyLoss()
+        self.checkpoint_epochs = checkpoint_epochs
 
         self.cnnexpert = UNetExpert1(inchannels=1, numclasses=5)
 
@@ -147,8 +148,8 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
-            plt.imsave(file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave(file_name[0]+"_eval_pred_thermo.png", pred[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
             # plt.imsave("eval_thermo_", pred[0], format='png')
             # plt.imshow(pred[0])
