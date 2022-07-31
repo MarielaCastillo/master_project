@@ -180,7 +180,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         input_rgb, input_thermo, labels, file_name = test_batch
         labels = labels.long()
 
-        outputs = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
         loss = self.criterion(outputs, labels)
 
         if viz_pred:
@@ -208,7 +208,32 @@ class LitModelEfficientNetFull(pl.LightningModule):
         # loss = F.cross_entropy(predicted, labels)
 
         acc = accuracy(outputs, labels.long())
-        metrics = {"val_acc": acc, "val_loss": loss}
+        
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels)
+
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels)
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels)
+
+        # Accuracy = (TP + TN)/Total
+        acc = accuracy(outputs, labels.long())
+
+        if perc_rgb > perc_thermo:
+            self.count_rgb = self.count_rgb + 1
+        else:
+            self.count_thermo = self.count_thermo + 1
+
+        metrics = {"val_acc":acc, "val_loss":loss,  "iou":iou,
+                                                        "recall": recall,
+                                                        "precision":precision,
+                                                        "count_rgb":self.count_rgb, 
+                                                        "count_thermo":self.count_thermo}
         self.log_dict(metrics)
 
 
