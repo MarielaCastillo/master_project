@@ -40,7 +40,7 @@ def main():
 
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_full/')
 
-    logger = TensorBoardLogger("tb_logs", name="full")
+    logger = TensorBoardLogger("logs", name="full")
     
     trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
     #trainer = Trainer(gpus=1, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)

@@ -3,6 +3,9 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from torchmetrics.functional import accuracy
+from torchmetrics import JaccardIndex
+from torchmetrics import Recall
+from torchmetrics import Precision
 from segmentation_models_pytorch.unet.decoder import UnetDecoder
 from segmentation_models_pytorch.base.heads import SegmentationHead
 
@@ -139,7 +142,20 @@ class LitModelEfficientNetFull(pl.LightningModule):
         # print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
         loss = self.criterion(outputs, labels)
 
+        # IoU
+        jaccard = JaccardIndex(num_classes=5)
+        iou = jaccard(outputs, labels)
 
+        # Recall = TP/(TP+FN)
+        metric1 = Recall(num_classes=5, mdmc_average="samplewise")
+        recall = metric1(outputs, labels)
+
+        # Precision = TP/(TP+FP)
+        metric2 = Precision(num_classes=5, mdmc_average="samplewise")
+        precision = metric2(outputs, labels)
+
+        # Accuracy = (TP + TN)/Total
+        acc = accuracy(outputs, labels.long())
 
         if perc_rgb > perc_thermo:
             self.count_rgb = self.count_rgb + 1
@@ -148,9 +164,12 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
         self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
-        acc = accuracy(outputs, labels.long())
-        metrics = {"train_acc": acc, "train_loss": loss, "count_rgb": self.count_rgb, 
-                                                      "count_thermo": self.count_thermo}
+        
+        metrics = {"train_acc":acc, "train_loss":loss,  "iou":iou,
+                                                        "recall": recall,
+                                                        "precision":precision,
+                                                        "count_rgb":self.count_rgb, 
+                                                        "count_thermo":self.count_thermo}
         self.log_dict(metrics)
 
         return loss

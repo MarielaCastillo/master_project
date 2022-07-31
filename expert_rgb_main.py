@@ -20,7 +20,7 @@ def main():
     model = LitModelEfficientNetRgb(4, transform_rgb)  # batch_size
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_rgb/')
 
-    logger = TensorBoardLogger("tb_logs", name="expert_rgb")
+    logger = TensorBoardLogger("logs", name="expert_rgb")
 
     # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])

@@ -30,7 +30,7 @@ def main():
     model = LitModelEfficientNetThermo(4, transform_thermo)
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints_thermo/')
 
-    logger = TensorBoardLogger("tb_logs", name="expert_thermo")
+    logger = TensorBoardLogger("logs", name="expert_thermo")
 
     # trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
     trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
