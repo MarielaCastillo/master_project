@@ -14,6 +14,7 @@ from expert_rgb_module import MultiModalDataset2
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class LitModelEfficientNetFull(pl.LightningModule):
@@ -144,7 +145,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         loss = self.criterion(outputs, labels)
 
         # IoU
-        jaccard = JaccardIndex(num_classes=5)
+        jaccard = JaccardIndex(num_classes=5).to(device)
         iou = jaccard(outputs, labels)
 
         # Recall = TP/(TP+FN)
@@ -211,7 +212,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         acc = accuracy(outputs, labels.long())
         
         # IoU
-        jaccard = JaccardIndex(num_classes=5)
+        jaccard = JaccardIndex(num_classes=5).to(device)
         iou = jaccard(outputs, labels)
 
         # Recall = TP/(TP+FN)
