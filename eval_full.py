@@ -3,6 +3,7 @@ import torchvision.transforms as transforms
 from expert_rgb_module import LitModelEfficientNetRgb
 from expert_thermo_module import LitModelEfficientNetThermo
 from full_module import LitModelEfficientNetFull
+from pytorch_lightning.loggers import TensorBoardLogger
 
 
 def main():
@@ -36,8 +37,10 @@ def main():
                                                          transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                                          model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
                                                          checkpoint_epochs=str(chkpt_epochs))
+    logger = TensorBoardLogger("logs", name="expert_thermo_eval")
+
     model.eval()
-    trainer = Trainer(gpus=1, max_epochs=1)
+    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
     # trainer = Trainer(accelerator="cpu", max_epochs=1)
     trainer.test(model=model)
 
