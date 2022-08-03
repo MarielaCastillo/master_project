@@ -4,6 +4,7 @@ import torchvision.transforms as transforms
 
 from expert_thermo_module import LitModelEfficientNetThermo
 from expert_thermo_module import ScaleThermal
+from pytorch_lightning.loggers import TensorBoardLogger
 
 
 def main():
@@ -20,8 +21,10 @@ def main():
                                                             # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
                                                             checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt", 
                                                             transform=transform_thermo, checkpoint_epochs=str(chkpt_epochs))
+    logger = TensorBoardLogger("logs", name="expert_thermo_eval")
+
     model.eval()
-    trainer = Trainer(gpus=1, max_epochs=1)
+    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
     # trainer = Trainer(accelerator="cpu", max_epochs=1)
     trainer.test(model=model)
 
