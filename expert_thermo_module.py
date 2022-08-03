@@ -147,8 +147,8 @@ class LitModelEfficientNetThermo(pl.LightningModule):
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
-            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
+            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
             # plt.imsave("eval_thermo_", pred[0], format='png')
             # plt.imshow(pred[0])

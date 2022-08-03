@@ -234,8 +234,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
             # plt.imsave("eval_rgb/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_rgb/"+file_name[0]+"_eval_pred_rgb.png", pred[0])
 
-            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave(self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_rgb.png", pred[0])
+            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_rgb.png", pred[0])
             
             viz_pred = False
             # plt.imshow(pred[0])

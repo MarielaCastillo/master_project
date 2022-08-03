@@ -7,6 +7,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 
 def main():
+    # Checkpoint file to use
+    chkpt_path = "checkpoints_full/epoch=1-step=2026.ckpt"
+
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Resize((512, 640)),
@@ -29,11 +32,14 @@ def main():
         checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
         transform=transform_thermo)
 
-    chkpt_epochs = 1
+    # Get the epoch from name
+    chkpt_epochs=chkpt_path.replace("checkpoints_full/epoch=", "")
+    head, sep, tail = chkpt_epochs.partition('-')
+    chkpt_epochs = head
 
     model = LitModelEfficientNetFull.load_from_checkpoint(batch_size=1,
                                                          # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
-                                                         checkpoint_path="checkpoints_full/epoch=1-step=2026.ckpt",
+                                                         checkpoint_path=chkpt_path,
                                                          transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                                          model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
                                                          checkpoint_epochs=str(chkpt_epochs))
@@ -41,7 +47,7 @@ def main():
 
     model.eval()
     trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
-    # trainer = Trainer(accelerator="cpu", max_epochs=1)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
     trainer.test(model=model)
 
 
