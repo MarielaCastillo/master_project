@@ -42,8 +42,8 @@ def main():
 
     logger = TensorBoardLogger("logs", name="full")
     
-    trainer = Trainer(accelerator="cpu", max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
-    #trainer = Trainer(gpus=1, max_epochs=2, callbacks=[checkpoint_callback], logger=logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
+    trainer = Trainer(gpus=1, max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
 
     model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                      model1=expert_rgb, model2=expert_thermo)
