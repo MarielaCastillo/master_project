@@ -17,6 +17,7 @@ from torchmetrics import Precision
 # from tensorboard_evaluation import Evaluation
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class MultiModalDataset2(Dataset):
     def __init__(self, txt_file, file_path, label_path, transform_rgb=None, transform_thermo=None):
@@ -184,7 +185,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         loss = self.criterion(outputs, labels.long())
 
         # IoU
-        jaccard = JaccardIndex(num_classes=5)
+        jaccard = JaccardIndex(num_classes=5).to(device)
         iou = jaccard(outputs, labels.long())
 
         # Recall = TP/(TP+FN)
@@ -245,7 +246,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         # self.tensorboard_eval.write_episode_data(episode=epoch, eval_dict={"validation accuracy": val_accuracy})
 
         # IoU
-        jaccard = JaccardIndex(num_classes=5)
+        jaccard = JaccardIndex(num_classes=5).to(device)
         iou = jaccard(outputs, labels.long())
 
         # Recall = TP/(TP+FN)
