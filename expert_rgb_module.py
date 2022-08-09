@@ -48,7 +48,7 @@ class MultiModalDataset2(Dataset):
             img_rgb = self.transform_rgb(img_rgb)
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
-            img_thermo = img_thermo[0].unsqueeze(dim=0)
+            # img_thermo = img_thermo[0].unsqueeze(dim=0)
         
 
         return img_rgb, img_thermo, ndarray_from_file, file_name
@@ -131,7 +131,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
-                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_rgb=self.transform_rgb)  
@@ -143,7 +144,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     def test_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
-        dir_path3 = dir_path + '/' + 'align'
+        dir_path3 = dir_path + '/' + 'align2'
 
         '''
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
@@ -153,7 +154,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
         
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
-                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb)         
