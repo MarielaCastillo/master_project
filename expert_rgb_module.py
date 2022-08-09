@@ -29,7 +29,8 @@ class MultiModalDataset2(Dataset):
 
     def __getitem__(self, index):
         thermo_path = os.path.join(self.files_path, self.annotations.iloc[index, 0]+".jpeg")
-        img_thermo = io.imread(thermo_path)
+        #img_thermo = io.imread(thermo_path)
+        img_thermo = io.imread(thermo_path, as_gray=True)#.astype(np.double)
 
         file_name = self.annotations.iloc[index, 0].replace("_PreviewData", "")
 
@@ -48,6 +49,7 @@ class MultiModalDataset2(Dataset):
             img_rgb = self.transform_rgb(img_rgb)
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
+            img_thermo = img_thermo.to(dtype=torch.float32)
             # img_thermo = img_thermo[0].unsqueeze(dim=0)
         
 
