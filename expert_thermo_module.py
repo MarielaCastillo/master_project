@@ -52,8 +52,8 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
         '''
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
-                                     #file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_thermo=self.transform_thermo)  
