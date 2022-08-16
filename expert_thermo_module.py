@@ -15,6 +15,7 @@ from expert_rgb_module import MultiModalDataset2
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import matplotlib.pyplot as plt #new
 
 
 class ScaleThermal:
@@ -53,7 +54,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         '''
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
                                      #file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                      file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_thermo=self.transform_thermo)  
@@ -76,9 +77,9 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         '''
 
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
-                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
-                                     #label_path=dir_path + '/' + 'labels_ss',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     # file_path=dir_path3 + '/' + 'JPEGImages',
+                                     # label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_thermo=self.transform_thermo)         
                                         
@@ -93,11 +94,21 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         return optimizer
     
     def training_step(self, train_batch, batch_idx):
-        viz_pred = False
+        viz_pred=False
         _, input_thermo, labels, file_name = train_batch
 
         outputs = self(input_thermo)
+
         if viz_pred:
+            '''
+            print("THermo input size", input_thermo.size(), input_thermo.max(), input_thermo.min())
+            plt.imshow(input_thermo[0].permute(1, 2, 0))
+            plt.show()
+            print("labels are ", labels.size(), labels.max(), labels.min())
+            plt.imshow(input_thermo[0].permute(1, 2, 0))
+            plt.show()
+            print("output is")
+            '''
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
             pred = pred * 255 / pred.max()
             plt.imshow(pred[0])
