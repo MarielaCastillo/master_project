@@ -51,7 +51,7 @@ class MultiModalDataset2(Dataset):
         if self.transform_thermo:
             img_thermo = self.transform_thermo(img_thermo)
             # img_thermo = img_thermo.to(dtype=torch.float32)
-            # img_thermo = img_thermo[0].unsqueeze(dim=0)
+            img_thermo = img_thermo[0].unsqueeze(dim=0)
         
 
         return img_rgb, img_thermo, ndarray_from_file, file_name
