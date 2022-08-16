@@ -12,10 +12,11 @@ from expert_rgb_module import UNetExpert1
 from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
 
+import numpy as np
+
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-import matplotlib.pyplot as plt #new
 
 
 class ScaleThermal:
@@ -147,25 +148,71 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         # _, predicted = torch.max(outputs.data, 1)
 
         if viz_pred:
+            tensor0 = torch.zeros(512, 640)
+            #plt.imshow(tensor0)
+            #plt.show()
+
+            tensor1 = torch.full((512, 640), 0)
+
+            for i in range(0, 30):
+                for j in range(20, 60):
+                    tensor1[i,j] = 255
+
+            #plt.imshow(tensor1)
+            #plt.show()
+
+            tensor2 = torch.full((512 ,640), 0)
+
+
+            for i in range(0, 30):
+                for j in range(20, 60):
+                    tensor2[i,j] = 255
+
+            for i in range(150, 200):
+                for j in range(20, 60):
+                    tensor2[i,j] = 500
+            #plt.imshow(tensor2)
+            #plt.show()
+
+
             lbl = labels.detach().cpu().numpy()
-            # plt.imshow(lbl[0])
-            # plt.show()
+            plt.imshow(lbl[0], vmin=0, vmax=5)
+            plt.show()
 
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
+            #pred = pred * 255 / 5
+
+            values, counts = np.unique(lbl, return_counts=True)
+            values2, counts2 = np.unique(pred, return_counts=True)
+
+            print("values", values, "counts", counts)
+            print("values2", values2, "counts2", counts2)
+            print()
+
+            '''
             if pred.max() != 0:
                 pred = pred * 255 / pred.max()
             else:
                 pred = pred * 0
+            '''
+            
+
+            
             
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_thermo/"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
-            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
+            ### plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
+            ### plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
 
             # plt.imsave("eval_thermo_", pred[0], format='png')
-            # plt.imshow(pred[0])
-            # plt.show()
+            plt.imshow(pred[0], vmin=0, vmax=5)
+            plt.show()
+
+
+
+
+
 
         loss = self.criterion(outputs, labels.long())
 
@@ -192,7 +239,6 @@ class LitModelEfficientNetThermo(pl.LightningModule):
                                                         "val_precision":precision
                                                         }
         self.log_dict(metrics)
-
 
 
         return loss
