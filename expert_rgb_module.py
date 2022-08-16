@@ -14,6 +14,7 @@ from torchmetrics import JaccardIndex
 from torchmetrics import Recall
 from torchmetrics import Precision
 
+from matplotlib.colors import ListedColormap
 # from tensorboard_evaluation import Evaluation
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -135,8 +136,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
-                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_rgb=self.transform_rgb)  
@@ -148,7 +149,7 @@ class LitModelEfficientNetRgb(pl.LightningModule):
 
     def test_dataloader(self):
         dir_path2 = dir_path + '/' + 'thermaldatasetfolder/test/seq_01_day/00'
-        dir_path3 = dir_path + '/' + 'align2'
+        dir_path3 = dir_path + '/' + 'align'
 
         '''
         testset = MultiModalDataset(rgb_path= dir_path2 + '/' + 'fl_rgb', 
@@ -158,8 +159,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
         
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
-                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     #file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb)         
@@ -225,23 +226,35 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         outputs = self(images)
 
         if viz_pred:
+            label_dict = {0: 'unlabelled',
+                        1: 'car',
+                        2: 'person',
+                        3: 'bycicle',
+                        4: 'dog'}
+            color_dict = {0: 'black',
+                        1: 'blue',
+                        2: 'yellow',
+                        3: 'lime',
+                        4: 'red'}
+
+            imin = min(label_dict)
+            imax = max(label_dict)
+
+            colourmap = ListedColormap(color_dict.values())
             # Labels
             lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
-            # plt.imshow(lbl[0])
-            #plt.show()
 
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
-            if pred.max() != 0:
-                pred = pred * 255 / pred.max()
-            else:
-                pred = pred * 0
 
-            # plt.imsave("eval_rgb/"+file_name[0]+"_eval_label.png", lbl[0])
-            # plt.imsave("eval_rgb/"+file_name[0]+"_eval_pred_rgb.png", pred[0])
+            # Visualise
+            # plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            # plt.show()
+            # plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            # plt.show()
 
-            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_rgb.png", pred[0])
+            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.imsave("./img_eval_rgb/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_rgb.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             
             viz_pred = False
             # plt.imshow(pred[0])

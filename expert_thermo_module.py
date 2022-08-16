@@ -12,6 +12,8 @@ from expert_rgb_module import UNetExpert1
 from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
 
+from matplotlib.colors import ListedColormap
+
 import numpy as np
 
 import os 
@@ -148,73 +150,47 @@ class LitModelEfficientNetThermo(pl.LightningModule):
         # _, predicted = torch.max(outputs.data, 1)
 
         if viz_pred:
-            tensor0 = torch.zeros(512, 640)
-            #plt.imshow(tensor0)
-            #plt.show()
+            label_dict = {0: 'unlabelled',
+                        1: 'car',
+                        2: 'person',
+                        3: 'bycicle',
+                        4: 'dog'}
+            color_dict = {0: 'black',
+                        1: 'blue',
+                        2: 'yellow',
+                        3: 'lime',
+                        4: 'red'}
 
-            tensor1 = torch.full((512, 640), 0)
+            imin = min(label_dict)
+            imax = max(label_dict)
 
-            for i in range(0, 30):
-                for j in range(20, 60):
-                    tensor1[i,j] = 255
-
-            #plt.imshow(tensor1)
-            #plt.show()
-
-            tensor2 = torch.full((512 ,640), 0)
-
-
-            for i in range(0, 30):
-                for j in range(20, 60):
-                    tensor2[i,j] = 255
-
-            for i in range(150, 200):
-                for j in range(20, 60):
-                    tensor2[i,j] = 500
-            #plt.imshow(tensor2)
-            #plt.show()
-
+            colourmap = ListedColormap(color_dict.values())
 
             lbl = labels.detach().cpu().numpy()
-            plt.imshow(lbl[0], vmin=0, vmax=5)
-            plt.show()
 
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
-            #pred = pred * 255 / 5
-
-            values, counts = np.unique(lbl, return_counts=True)
-            values2, counts2 = np.unique(pred, return_counts=True)
-
-            print("values", values, "counts", counts)
-            print("values2", values2, "counts2", counts2)
-            print()
-
             '''
-            if pred.max() != 0:
-                pred = pred * 255 / pred.max()
-            else:
-                pred = pred * 0
+            # values, counts = np.unique(lbl, return_counts=True)
+            # values2, counts2 = np.unique(pred, return_counts=True)
+
+            # print(file_name)
+            # print("values", values, "counts", counts)
+            # print("values2", values2, "counts2", counts2)
+            # print()
             '''
+
+            # plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            # plt.show()
+            # plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            # plt.show()
+
+            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             
-
-            
-            
-            # plt.imsave("eval_thermo/"+file_name[0]+"_eval_label.png", lbl[0])
-            # plt.imsave("eval_thermo/"+file_name[0]+"_eval_pred_thermo.png", pred[0])
-
-            ### plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            ### plt.imsave("./img_eval_thermo/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_thermo.png", pred[0])
-
-            # plt.imsave("eval_thermo_", pred[0], format='png')
-            plt.imshow(pred[0], vmin=0, vmax=5)
-            plt.show()
-
-
-
-
-
+            viz_pred = False
 
         loss = self.criterion(outputs, labels.long())
+        
 
         # loss = F.mse_loss(predicted, labels)
 
@@ -242,4 +218,3 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
 
         return loss
-        
