@@ -12,6 +12,8 @@ from segmentation_models_pytorch.base.heads import SegmentationHead
 # from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
 
+from matplotlib.colors import ListedColormap
+
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -188,6 +190,21 @@ class LitModelEfficientNetFull(pl.LightningModule):
         loss = self.criterion(outputs, labels)
 
         if viz_pred:
+            label_dict = {0: 'unlabelled',
+                        1: 'car',
+                        2: 'person',
+                        3: 'bycicle',
+                        4: 'dog'}
+            color_dict = {0: 'black',
+                        1: 'blue',
+                        2: 'yellow',
+                        3: 'lime',
+                        4: 'red'}
+
+            imin = min(label_dict)
+            imax = max(label_dict)
+
+            colourmap = ListedColormap(color_dict.values())
             # Labels
             lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
             # plt.imshow(lbl[0])
@@ -195,16 +212,12 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
-            if pred.max() != 0:
-                pred = pred * 255 / pred.max()
-            else:
-                pred = pred * 0
 
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
             
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0])
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0])
+            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             
             viz_pred = False
 

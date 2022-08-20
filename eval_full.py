@@ -8,7 +8,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 def main():
     # Checkpoint file to use
-    chkpt_path = "checkpoints_full/epoch=1-step=2026.ckpt"
+    # chkpt_path = "checkpoints_full/epoch=0-step=4129.ckpt"
+    chkpt_path = "checkpoints_full/epoch=39-step=165160.ckpt"
 
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
@@ -23,13 +24,15 @@ def main():
     model_rgb = LitModelEfficientNetRgb.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",  # Freiburg Thermal 
-        checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",
+        # checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",
         # checkpoint_path="checkpoints_rgb/epoch=49-step=17250.ckpt",
+        checkpoint_path="checkpoints_thermo/epoch=79-step=27600.ckpt"
         transform=transform_rgb)
     model_thermo = LitModelEfficientNetThermo.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
-        checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
+        # checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
+        checkpoint_path="checkpoints_thermo/epoch=79-step=27600.ckpt"
         transform=transform_thermo)
 
     # Get the epoch from name
@@ -46,8 +49,8 @@ def main():
     logger = TensorBoardLogger("logs", name="expert_thermo_eval")
 
     model.eval()
-    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
-    # trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
+    #trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
+    trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
     trainer.test(model=model)
 
 
