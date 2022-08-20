@@ -90,20 +90,11 @@ class LitModelEfficientNetFull(pl.LightningModule):
         # poner nombre de la imagen si se puede
 
     def train_dataloader(self):
-        dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
-        dir_path3 = dir_path + '/' + 'align'
-
-        '''
-        trainset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
-                                     thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
-                                     label_path=dir_path2 + '/' + 'fl_rgb_labels',
-                                     transform_rgb=self.transform_rgb,
-                                     transform_thermo=self.transform_thermo)
-        '''                             
+        dir_path3 = dir_path + '/' + 'align'                        
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
-                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     # file_path=dir_path3 + '/' + 'JPEGImages',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_rgb=self.transform_rgb,
                                      transform_thermo=self.transform_thermo)  
@@ -113,20 +104,11 @@ class LitModelEfficientNetFull(pl.LightningModule):
         return trainloader
 
     def test_dataloader(self):
-        dir_path2 = dir_path + '/' + 'thermaldatasetfolder/train/seq_00_day/00'
         dir_path3 = dir_path + '/' + 'align'
         
-        '''
-        testset = MultiModalDataset(rgb_path=dir_path2 + '/' + 'fl_rgb',
-                                    thermo_path=dir_path2 + '/' + 'fl_ir_aligned',
-                                    label_path=dir_path2 + '/' + 'fl_rgb_labels',
-                                    transform_rgb=self.transform_rgb,
-                                    transform_thermo=self.transform_thermo)
-        '''
-
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
-                                     # file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     file_path=dir_path3 + '/' + 'JPEGImages',
+                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     # file_path=dir_path3 + '/' + 'JPEGImages',
                                      label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb,
                                      transform_thermo=self.transform_thermo) 
@@ -141,10 +123,51 @@ class LitModelEfficientNetFull(pl.LightningModule):
         return optimizer
     
     def training_step(self, train_batch):
+        viz_pred=False
         input_rgb, input_thermo, labels, file_name = train_batch
         labels = labels.long()
 
         outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
+
+        if viz_pred:
+            label_dict = {0: 'unlabelled',
+                        1: 'car',
+                        2: 'person',
+                        3: 'bycicle',
+                        4: 'dog'}
+            color_dict = {0: 'black',
+                        1: 'blue',
+                        2: 'yellow',
+                        3: 'lime',
+                        4: 'red'}
+
+            imin = min(label_dict)
+            imax = max(label_dict)
+
+            colourmap = ListedColormap(color_dict.values())
+            
+            print("RGB input size", input_rgb.size(), input_rgb.max(), input_rgb.min())
+            plt.imshow(input_rgb[0].permute(1, 2, 0))
+            print("RGB")
+            plt.show()
+
+            print("Thermo input size", input_thermo.size(), input_thermo.max(), input_thermo.min())
+            plt.imshow(input_thermo[0].permute(1, 2, 0))
+            print("Thermo")
+            plt.show()
+
+            print("labels are ", labels.size(), labels.max(), labels.min())
+            plt.imshow(labels[0], cmap=colourmap, vmin=imin, vmax=imax)
+            print("Labels")
+            plt.show()
+
+            print("output is")
+            
+            pred = outputs.argmax(axis=1).detach().cpu().numpy()
+            # pred = pred * 255 / pred.max()
+            plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.show()
+
         # print("perc_rgb", perc_rgb, "perc_thermo", perc_thermo)
         loss = self.criterion(outputs, labels)
 
@@ -212,6 +235,11 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
+
+            plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.show()
+            plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.show()
 
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
