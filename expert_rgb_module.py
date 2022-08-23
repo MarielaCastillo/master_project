@@ -136,8 +136,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
 
         trainset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_train.txt',
-                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     #file_path=dir_path3 + '/' + 'JPEGImages',
+                                     #file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy',
                                      transform_rgb=self.transform_rgb)  
@@ -159,8 +159,8 @@ class LitModelEfficientNetRgb(pl.LightningModule):
         '''
         
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
-                                     file_path=dir_path3 + '/' + 'AnnotatedImages',
-                                     #file_path=dir_path3 + '/' + 'JPEGImages',
+                                     #file_path=dir_path3 + '/' + 'AnnotatedImages',
+                                     file_path=dir_path3 + '/' + 'JPEGImages',
                                      #label_path=dir_path + '/' + 'labels_ss',
                                      label_path=dir_path + '/' + 'labels_npy_val',
                                      transform_rgb=self.transform_rgb)         
