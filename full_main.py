@@ -27,13 +27,13 @@ def main():
     model_rgb = LitModelEfficientNetRgb.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",  # Freiburg Thermal 
-        checkpoint_path="checkpoints_rgb/epoch=79-step=27600.ckpt",
+        checkpoint_path="checkpoints_rgb/epoch=499-step=129500.ckpt",
         # checkpoint_path="checkpoints_rgb/epoch=49-step=17250.ckpt",
         transform=transform_rgb)
     model_thermo = LitModelEfficientNetThermo.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
-        checkpoint_path="checkpoints_thermo/epoch=79-step=27600.ckpt",
+        checkpoint_path="checkpoints_thermo/epoch=499-step=129500.ckpt",
         transform=transform_thermo)
     expert_rgb = model_rgb.cnnexpert
     expert_thermo = model_thermo.cnnexpert
