@@ -26,13 +26,13 @@ def main():
         # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",  # Freiburg Thermal 
         # checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",
         # checkpoint_path="checkpoints_rgb/epoch=49-step=17250.ckpt",
-        checkpoint_path="checkpoints_rgb/epoch=79-step=27600.ckpt",
+        checkpoint_path="checkpoints_rgb/epoch=499-step=129500.ckpt",
         transform=transform_rgb)
     model_thermo = LitModelEfficientNetThermo.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
         # checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
-        checkpoint_path="checkpoints_thermo/epoch=79-step=27600.ckpt",
+        checkpoint_path="checkpoints_thermo/epoch=499-step=129500.ckpt",
         transform=transform_thermo)
 
     # Get the epoch from name
@@ -46,11 +46,11 @@ def main():
                                                          transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                                          model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
                                                          checkpoint_epochs=str(chkpt_epochs))
-    logger = TensorBoardLogger("logs", name="expert_thermo_eval")
+    logger = TensorBoardLogger("logs", name="full_eval")
 
     model.eval()
-    #trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
-    trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
+    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
     trainer.test(model=model)
 
 
