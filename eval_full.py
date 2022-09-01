@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 def main():
     # Checkpoint file to use
     # chkpt_path = "checkpoints_full/epoch=0-step=4129.ckpt"
-    chkpt_path = "checkpoints_full/epoch=39-step=165160.ckpt"
+    chkpt_path = "checkpoints_full/epoch=99-step=412900.ckpt"
 
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
