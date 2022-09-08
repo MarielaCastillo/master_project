@@ -4,12 +4,14 @@ from expert_rgb_module import LitModelEfficientNetRgb
 from expert_thermo_module import LitModelEfficientNetThermo
 from full_module import LitModelEfficientNetFull
 from pytorch_lightning.loggers import TensorBoardLogger
+from pytorch_lightning.loggers import WandbLogger
 
 
 def main():
     # Checkpoint file to use
     # chkpt_path = "checkpoints_full/epoch=0-step=4129.ckpt"
-    chkpt_path = "checkpoints_full/epoch=99-step=412900.ckpt"
+    # chkpt_path = "checkpoints_full/epoch=99-step=412900.ckpt"
+    chkpt_path = "checkpoints_full/epoch=299-step=1238700.ckpt"
 
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
@@ -46,11 +48,12 @@ def main():
                                                          transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                                          model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
                                                          checkpoint_epochs=str(chkpt_epochs))
-    logger = TensorBoardLogger("logs", name="full_eval")
+    # logger = TensorBoardLogger("logs", name="full_eval")
+    wandb_logger = WandbLogger(project="wandb", log_model="all")
 
     model.eval()
-    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
-    # trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
+    # trainer = Trainer(gpus=1, max_epochs=1, logger=wandb_logger)
+    trainer = Trainer(accelerator="cpu", max_epochs=1, logger=wandb_logger)
     trainer.test(model=model)
 
 

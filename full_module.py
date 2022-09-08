@@ -14,6 +14,9 @@ from expert_rgb_module import MultiModalDataset2
 
 from matplotlib.colors import ListedColormap
 
+import wandb as wandb
+from pytorch_lightning.loggers import WandbLogger
+
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -83,7 +86,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         percentage_rgb = int(rgb_better)/total_elements * 100
         percentage_thermo= int(thermo_better)/total_elements * 100
 
-        return outfinal, percentage_rgb, percentage_thermo
+        return outfinal, percentage_rgb, percentage_thermo, gating
 
         # contador rgb, contador thermo y %
         # guardar un ejemplo donde ganoo rgb y otra de thermo
@@ -107,6 +110,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         dir_path3 = dir_path + '/' + 'align'
         
         testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
+                                        # txt_file=dir_path3 + '/' + 'align_validation2.txt', # <--- THIS #asdf
                                      #file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      file_path=dir_path3 + '/' + 'JPEGImages',
                                      label_path=dir_path + '/' + 'labels_npy_val',
@@ -127,7 +131,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         input_rgb, input_thermo, labels, file_name = train_batch
         labels = labels.long()
 
-        outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo, gating = self(input_rgb, input_thermo)
 
         if viz_pred:
             label_dict = {0: 'unlabelled',
@@ -191,15 +195,27 @@ class LitModelEfficientNetFull(pl.LightningModule):
         else:
             self.count_thermo = self.count_thermo + 1
 
-        self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        # self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         
-        metrics = {"train_acc":acc, "train_loss":loss,  "iou":iou,
-                                                        "recall": recall,
-                                                        "precision":precision,
-                                                        "count_rgb":self.count_rgb, 
-                                                        "count_thermo":self.count_thermo}
-        self.log_dict(metrics)
+        # metrics = {"train_acc":acc, "train_loss":loss,  "iou":iou,
+        #                                                 "recall": recall,
+        #                                                 "precision":precision,
+        #                                                 "count_rgb":self.count_rgb, 
+        #                                                 "count_thermo":self.count_thermo}
+        # self.log_dict(metrics)
+
+                
+        metrics = {"global_step":self.trainer.global_step, "current_epoch":self.trainer.current_epoch,
+                    "train/train_acc":acc, "train/train_loss":loss,  "train/iou":iou,
+                                                        "train/recall": recall,
+                                                        "train/precision":precision,
+                                                        "train/count_rgb":self.count_rgb, 
+                                                        "train/count_thermo":self.count_thermo}
+
+        for elem in metrics:
+            self.logger.experiment.define_metric(elem, step_metric="global_step")
+        self.logger.experiment.log(metrics)
 
         return loss
 
@@ -209,10 +225,14 @@ class LitModelEfficientNetFull(pl.LightningModule):
         input_rgb, input_thermo, labels, file_name = test_batch
         labels = labels.long()
 
-        outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo, gating = self(input_rgb, input_thermo)
         loss = self.criterion(outputs, labels)
 
         if viz_pred:
+            #print(file_name[0])
+            if(file_name[0]=='FLIR_09389'):
+                print("yes")
+
             label_dict = {0: 'unlabelled',
                         1: 'car',
                         2: 'person',
@@ -236,16 +256,26 @@ class LitModelEfficientNetFull(pl.LightningModule):
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
 
+            # Gating
+            gate_rgb = gating[:,0].detach().cpu().numpy()
+            gate_thermo = gating[:,1].detach().cpu().numpy()
+
             plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            #plt.show()
             plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            #plt.show()
+            
+            plt.imshow(gate_rgb[0]) #, cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.show()
+            plt.imshow(gate_thermo[0]) # , cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.show()
 
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
             
             plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
             plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            
             
             viz_pred = False
 
@@ -274,12 +304,31 @@ class LitModelEfficientNetFull(pl.LightningModule):
         else:
             self.count_thermo = self.count_thermo + 1
 
-        metrics = {"val_acc":acc, "val_loss":loss,  "iou":iou,
-                                                        "recall": recall,
-                                                        "precision":precision,
-                                                        "count_rgb":self.count_rgb, 
-                                                        "count_thermo":self.count_thermo}
-        self.log_dict(metrics)
+        # metrics = {"val_acc":acc, "val_loss":loss,  "iou":iou,
+                                                        # "recall": recall,
+                                                        # "precision":precision,
+                                                        # "count_rgb":self.count_rgb, 
+                                                        # "count_thermo":self.count_thermo}
+                                                        
+        # self.log_dict(metrics)
+
+        #wb_imgs = []
+        #wb_imgs.append(pred[0])
+        #wb_imgs.append(lbl[0])
+
+
+        metrics = {"global_step":self.trainer.global_step, "current_epoch":self.trainer.current_epoch,
+                    "test/test_acc":acc, "test/train_loss":loss,  "test/iou":iou,
+                                                        "test/recall": recall,
+                                                        "test/precision":precision,
+                                                        "test/count_rgb":self.count_rgb, 
+                                                        "test/count_thermo":self.count_thermo,
+                                                        #"img_eval/full":[wandb.Image(image) for image in wb_imgs]
+                                                        }
+
+        for elem in metrics:
+            self.logger.experiment.define_metric(elem, step_metric="global_step")
+        self.logger.experiment.log(metrics)
 
 
         return loss
