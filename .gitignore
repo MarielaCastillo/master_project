@@ -146,6 +146,8 @@ labels_npy/
 labels_npy_val/
 tb_logs/
 logs/
+align2/
+*with_squares/
 
 
 
