@@ -40,11 +40,11 @@ def main():
 
     # Get the epoch from name
     chkpt_rgb=chkpt_path.replace("checkpoints_rgb/epoch=", "")
-    head, sep, tail = chkpt_epochs.partition('-')
+    head, sep, tail = chkpt_rgb.partition('-')
     chkpt_rgb = head
     # Get the epoch from name
     chkpt_thermo=chkpt_path.replace("checkpoints_thermo/epoch=", "")
-    head, sep, tail = chkpt_epochs.partition('-')
+    head, sep, tail = chkpt_thermo.partition('-')
     chkpt_thermo = head
 
     # Get the epoch from name
@@ -66,8 +66,8 @@ def main():
 
     model.eval()
     
-    # trainer = Trainer(gpus=1, max_epochs=1, logger=wandb_logger)
-    trainer = Trainer(accelerator="cpu", max_epochs=epochs, logger=wandb_logger)
+    trainer = Trainer(gpus=1, max_epochs=1, logger=wandb_logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=epochs, logger=wandb_logger)
     trainer.test(model=model)
 
 
