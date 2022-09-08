@@ -8,6 +8,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 
 def main():
+    epochs = 1
     # Checkpoint file to use
     # chkpt_path = "checkpoints_full/epoch=0-step=4129.ckpt"
     # chkpt_path = "checkpoints_full/epoch=99-step=412900.ckpt"
@@ -38,9 +39,20 @@ def main():
         transform=transform_thermo)
 
     # Get the epoch from name
+    chkpt_rgb=chkpt_path.replace("checkpoints_rgb/epoch=", "")
+    head, sep, tail = chkpt_epochs.partition('-')
+    chkpt_rgb = head
+    # Get the epoch from name
+    chkpt_thermo=chkpt_path.replace("checkpoints_thermo/epoch=", "")
+    head, sep, tail = chkpt_epochs.partition('-')
+    chkpt_thermo = head
+
+    # Get the epoch from name
     chkpt_epochs=chkpt_path.replace("checkpoints_full/epoch=", "")
     head, sep, tail = chkpt_epochs.partition('-')
     chkpt_epochs = head
+
+    
 
     model = LitModelEfficientNetFull.load_from_checkpoint(batch_size=1,
                                                          # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",
@@ -50,10 +62,12 @@ def main():
                                                          checkpoint_epochs=str(chkpt_epochs))
     # logger = TensorBoardLogger("logs", name="full_eval")
     wandb_logger = WandbLogger(project="wandb", log_model="all")
+    wandb_logger.log_hyperparams({"rgb_epochs":chkpt_rgb, "thermo_epochs":chkpt_thermo, "full_epochs":chkpt_epochs, "num_epochs":epochs})
 
     model.eval()
+    
     # trainer = Trainer(gpus=1, max_epochs=1, logger=wandb_logger)
-    trainer = Trainer(accelerator="cpu", max_epochs=1, logger=wandb_logger)
+    trainer = Trainer(accelerator="cpu", max_epochs=epochs, logger=wandb_logger)
     trainer.test(model=model)
 
 
