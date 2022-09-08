@@ -149,6 +149,7 @@ logs/
 align2/
 *with_squares/
 img*/
+wandb/
 
 
 
