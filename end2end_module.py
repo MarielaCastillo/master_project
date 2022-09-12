@@ -16,6 +16,8 @@ from expert_rgb_module import MultiModalDataset2
 
 from matplotlib.colors import ListedColormap
 
+import wandb as wandb
+from pytorch_lightning.loggers import WandbLogger
 
 import os 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -195,15 +197,20 @@ class LitModelEfficientNetFull(pl.LightningModule):
         else:
             self.count_thermo = self.count_thermo + 1
 
-        self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        # self.log("training_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
         
-        metrics = {"train_acc":acc, "train_loss":loss,  "iou":iou,
-                                                        "recall": recall,
-                                                        "precision":precision,
-                                                        "count_rgb":self.count_rgb, 
-                                                        "count_thermo":self.count_thermo}
-        self.log_dict(metrics)
+        metrics = {"global_step":self.trainer.global_step, "current_epoch":self.trainer.current_epoch,
+                                                        "train/train_acc":acc, "train/train_loss":loss,  "train/iou":iou,
+                                                        "train/recall": recall,
+                                                        "train/precision":precision,
+                                                        "train/count_rgb":self.count_rgb, 
+                                                        "train/count_thermo":self.count_thermo}
+        # self.log_dict(metrics)
+
+        for elem in metrics:
+            self.logger.experiment.define_metric(elem, step_metric="global_step")
+        self.logger.experiment.log(metrics)
 
         return loss
 
