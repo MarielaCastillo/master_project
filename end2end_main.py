@@ -15,6 +15,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 def main():
     epochs = 1
     batch_size = 1
+    
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
         # transforms.Resize((320, 960)),
@@ -39,8 +40,8 @@ def main():
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback], auto_lr_find=True)
 
-    trainer = Trainer(accelerator="cpu",max_epochs=epochs, callbacks=[checkpoint_callback], logger=wandb_logger)
-    # trainer = Trainer(gpus=3, max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
+    # trainer = Trainer(accelerator="cpu",max_epochs=epochs, callbacks=[checkpoint_callback], logger=wandb_logger)
+    trainer = Trainer(gpus=3, max_epochs=epochs, callbacks=[checkpoint_callback], logger=wandb_logger)
 
     trainer.fit(model)
 
