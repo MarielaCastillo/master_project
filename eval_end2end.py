@@ -35,7 +35,7 @@ def main():
     #logger = TensorBoardLogger("logs", name="full_eval")
         # logger = TensorBoardLogger("logs", name="full_eval")
     wandb_logger = WandbLogger(project="master_project", log_model="all")
-    wandb_logger.log_hyperparams({"0name":"eval_end2end", "full_epochs":int(chkpt_epochs), "num_epochs":epochs})
+    wandb_logger.log_hyperparams({"0name":"eval_end2end", "end2end_epochs":int(chkpt_epochs), "num_epochs":epochs})
 
     model.eval()
     trainer = Trainer(gpus=1, max_epochs=epochs, logger=wandb_logger)

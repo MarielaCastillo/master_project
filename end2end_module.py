@@ -264,12 +264,9 @@ class LitModelEfficientNetFull(pl.LightningModule):
             # plt.show()
             plt.imshow(gate_thermo[0]) # , cmap=colourmap, vmin=imin, vmax=imax)
             # plt.show()
-
-            # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
-            # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
             
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.imsave("./img_eval_end2end/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            plt.imsave("./img_eval_end2end/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_end2end.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             
             
             viz_pred = False
@@ -312,7 +309,6 @@ class LitModelEfficientNetFull(pl.LightningModule):
                                                         "test/precision":precision,
                                                         "test/count_rgb":self.count_rgb, 
                                                         "test/count_thermo":self.count_thermo,
-                                                        #"img_eval/full":[wandb.Image(image) for image in wb_imgs]
                                                         }
 
         for elem in metrics:
