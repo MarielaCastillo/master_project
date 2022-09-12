@@ -111,7 +111,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
     def test_dataloader(self):
         dir_path3 = dir_path + '/' + 'align'
         
-        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation2.txt',
+        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
                                         # txt_file=dir_path3 + '/' + 'align_validation.txt', # <--- THIS #asdf
                                      #file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      file_path=dir_path3 + '/' + 'JPEGImages',
@@ -225,8 +225,8 @@ class LitModelEfficientNetFull(pl.LightningModule):
 
         if viz_pred:
             #print(file_name[0])
-            if(file_name[0]=='FLIR_09389'):
-                print("yes")
+            # if(file_name[0]=='FLIR_09389'):
+            #    print("yes")
 
             label_dict = {0: 'unlabelled',
                         1: 'car',
@@ -256,14 +256,14 @@ class LitModelEfficientNetFull(pl.LightningModule):
             gate_thermo = gating[:,1].detach().cpu().numpy()
 
             plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            # plt.show()
             plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            # plt.show()
             
             plt.imshow(gate_rgb[0]) #, cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            # plt.show()
             plt.imshow(gate_thermo[0]) # , cmap=colourmap, vmin=imin, vmax=imax)
-            plt.show()
+            # plt.show()
 
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
@@ -299,12 +299,25 @@ class LitModelEfficientNetFull(pl.LightningModule):
         else:
             self.count_thermo = self.count_thermo + 1
 
-        metrics = {"val_acc":acc, "val_loss":loss,  "iou":iou,
-                                                        "recall": recall,
-                                                        "precision":precision,
-                                                        "count_rgb":self.count_rgb, 
-                                                        "count_thermo":self.count_thermo}
-        self.log_dict(metrics)
+        # metrics = {"val_acc":acc, "val_loss":loss,  "iou":iou,
+        #                                                "recall": recall,
+        #                                                "precision":precision,
+        #                                                "count_rgb":self.count_rgb, 
+        #                                                "count_thermo":self.count_thermo}
+        #self.log_dict(metrics)
+
+        metrics = {"test_step":self.test_step,
+                    "test/test_acc":acc, "test/test_loss":loss.item(),  "test/iou":iou,
+                                                        "test/recall": recall,
+                                                        "test/precision":precision,
+                                                        "test/count_rgb":self.count_rgb, 
+                                                        "test/count_thermo":self.count_thermo,
+                                                        #"img_eval/full":[wandb.Image(image) for image in wb_imgs]
+                                                        }
+
+        for elem in metrics:
+            self.logger.experiment.define_metric(elem, step_metric="test_step")
+        self.logger.experiment.log(metrics)
 
 
         return loss

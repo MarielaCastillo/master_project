@@ -15,7 +15,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 def main():
     epochs = 1
     batch_size = 1
-    
+
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
         # transforms.Resize((320, 960)),
@@ -34,7 +34,7 @@ def main():
 
     # logger = TensorBoardLogger("logs", name="end2end")
     wandb_logger = WandbLogger(project="master_project", log_model="all")
-    wandb_logger.log_hyperparams({"epochs":epochs, "batch_size":batch_size})
+    wandb_logger.log_hyperparams({"name":"end2end","epochs":epochs, "batch_size":batch_size})
 
     # trainer = Trainer(gpus=3, max_epochs=2, callbacks=[checkpoint_callback])
     # trainer = Trainer(accelerator="cpu",max_epochs=2, callbacks=[checkpoint_callback])
