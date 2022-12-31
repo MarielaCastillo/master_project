@@ -196,8 +196,77 @@ def get_npys_val():
         image = tensor_to_image(new_tensor)
 
         np.save("labels_npy_val/"+file_id, new_tensor)
-        
 
+def count_instances():
+    print("hi")
+    # define folders and file
+    dir_path3 = dir_path + '/' + 'align'
+    txt_file = dir_path3 + '/' + 'align_train.txt'
+    #txt_file = dir_path3 + '/' + 'align_validation.txt'
+    label_path=dir_path3 + '/' + 'Annotations'
+
+    total_car = 0
+    total_person = 0
+    total_bicycle = 0
+    total_dog = 0
+    
+    # get path of the xml file
+    file_names = pd.read_csv(txt_file, sep=" ", header=None)
+    lbl_str = ''.join(label_path)  #change tuple to str
+
+    for index, row in file_names.iterrows():
+        file_name = file_names.loc[index, 0].replace(" ", "")
+        xml_path = os.path.join(lbl_str, file_name+".xml")
+
+        tree = ET.parse(xml_path) 
+        xml_root = tree.getroot() 
+
+        val = row.values
+        val= str(val)
+
+        file_id = val.replace("_PreviewData", "")
+        file_id = file_id.replace("['", "")
+        file_id = file_id.replace("']", "")
+
+        file_id_jpg = file_id + "_labels.jpg"
+
+        car, person, bicycle, dog = counting_instances(xml_root, file_id_jpg)
+
+        total_car = total_car + car
+        total_person = total_person + person
+        total_bicycle = total_bicycle + bicycle
+        total_dog = total_dog + dog
+    
+    print("total_car:", total_car)
+    print("total_person:", total_person)
+    print("total_bicycle:", total_bicycle)
+    print("total_dog:", total_dog)
+
+
+def counting_instances(root, file):
+    length = len(root.findall('object'))
+    count_car = 0
+    count_person = 0
+    count_bicycle = 0
+    count_dog = 0
+    
+    # print("number of objects: ", length)
+    for i in range(5, 5+length):
+        class_name = root[i][0].text
+
+        if class_name == "car":
+            count_car = count_car + 1
+        if class_name == "person":  # 00266
+            count_person = count_person + 1
+        if class_name == "bicycle":  # 00266
+            count_bicycle = count_bicycle + 1
+            # print("File with bicycle:", file)
+        if class_name == "dog":  # 00266
+            count_dog = count_dog + 1
+            # print("File with dog:", file)
+    
+    return count_car, count_person, count_bicycle, count_dog
+        
 
 def main():
     #image = get_images()
@@ -208,7 +277,10 @@ def main():
     #tensor = transform(image)
 
     #get_images()
-    get_npys_val()
+    
+    
+    count_instances()
+    #get_npys_val()
     
     print("yay")
 

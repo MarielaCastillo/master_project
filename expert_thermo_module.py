@@ -196,7 +196,7 @@ class LitModelEfficientNetThermo(pl.LightningModule):
 
 
         # IoU
-        jaccard = JaccardIndex(num_classes=5).to(device)
+        jaccard = JaccardIndex(num_classes=5).to(outputs.device)
         iou = jaccard(outputs, labels.long())
 
         # Recall = TP/(TP+FN)

@@ -14,6 +14,10 @@ def main():
     # chkpt_path = "checkpoints_full/epoch=99-step=412900.ckpt"
     chkpt_path = "checkpoints_full/epoch=299-step=1238700.ckpt"
 
+    rgb_path="checkpoints_rgb/epoch=499-step=129500.ckpt"
+    thermo_path="checkpoints_thermo/epoch=499-step=129500.ckpt"
+
+
     transform_rgb = transforms.Compose(
         [transforms.ToTensor(),
          transforms.Resize((512, 640)),
@@ -29,21 +33,21 @@ def main():
         # checkpoint_path="checkpoints_rgb/epoch=0-step=489.ckpt",  # Freiburg Thermal 
         # checkpoint_path="checkpoints_rgb/epoch=0-step=345.ckpt",
         # checkpoint_path="checkpoints_rgb/epoch=49-step=17250.ckpt",
-        checkpoint_path="checkpoints_rgb/epoch=499-step=129500.ckpt",
+        checkpoint_path=rgb_path,
         transform=transform_rgb)
     model_thermo = LitModelEfficientNetThermo.load_from_checkpoint(
         batch_size=1,
         # checkpoint_path="checkpoints_thermo/epoch=1-step=978.ckpt",
         # checkpoint_path="checkpoints_thermo/epoch=0-step=345.ckpt",
-        checkpoint_path="checkpoints_thermo/epoch=499-step=129500.ckpt",
+        checkpoint_path=thermo_path,
         transform=transform_thermo)
 
     # Get the epoch from name
-    chkpt_rgb=chkpt_path.replace("checkpoints_rgb/epoch=", "")
+    chkpt_rgb=rgb_path.replace("checkpoints_rgb/epoch=", "")
     head, sep, tail = chkpt_rgb.partition('-')
     chkpt_rgb = head
     # Get the epoch from name
-    chkpt_thermo=chkpt_path.replace("checkpoints_thermo/epoch=", "")
+    chkpt_thermo=thermo_path.replace("checkpoints_thermo/epoch=", "")
     head, sep, tail = chkpt_thermo.partition('-')
     chkpt_thermo = head
 
@@ -61,13 +65,14 @@ def main():
                                                          model1=model_rgb.cnnexpert, model2 = model_thermo.cnnexpert,
                                                          checkpoint_epochs=str(chkpt_epochs))
     # logger = TensorBoardLogger("logs", name="full_eval")
-    wandb_logger = WandbLogger(project="wandb", log_model="all")
-    wandb_logger.log_hyperparams({"rgb_epochs":chkpt_rgb, "thermo_epochs":chkpt_thermo, "full_epochs":chkpt_epochs, "num_epochs":epochs})
+    wandb_logger = WandbLogger(project="master_project3", log_model="all")
+    wandb_logger.log_hyperparams({"0name":"eval_full", "1rgb_epochs":int(chkpt_rgb), "2thermo_epochs":int(chkpt_thermo), "3full_epochs":int(chkpt_epochs), "num_epochs":epochs})
 
     model.eval()
     
     trainer = Trainer(gpus=1, max_epochs=1, logger=wandb_logger)
     # trainer = Trainer(accelerator="cpu", max_epochs=epochs, logger=wandb_logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=epochs)
     trainer.test(model=model)
 
 

@@ -32,8 +32,8 @@ def main():
 
     logger = TensorBoardLogger("logs", name="expert_thermo")
 
-    # trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
-    trainer = Trainer(gpus=3, max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
+    trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
+    # trainer = Trainer(gpus=3, max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
     trainer.fit(model)
 
 

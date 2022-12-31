@@ -17,9 +17,6 @@ from torchmetrics import Precision
 from matplotlib.colors import ListedColormap
 # from tensorboard_evaluation import Evaluation
 
-from pytorch_lightning.loggers import WandbLogger
-wandb_logger = WandbLogger()
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -217,8 +214,6 @@ class LitModelEfficientNetRgb(pl.LightningModule):
                                                         "recall": recall,
                                                         "precision":precision}
         self.log_dict(metrics)
-
-        wandb_logger.experiment.config["training_lossdb"] = loss
 
         return loss
 

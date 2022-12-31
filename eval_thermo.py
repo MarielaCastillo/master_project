@@ -9,7 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 def main():
     # Checkpoint file to use
-    chkpt_path = "checkpoints_thermo/epoch=79-step=27600.ckpt"
+    chkpt_path = "checkpoints_thermo/epoch=499-step=129500.ckpt"
     
     # Get the epoch from name
     chkpt_epochs=chkpt_path.replace("checkpoints_thermo/epoch=", "")
@@ -29,8 +29,8 @@ def main():
     logger = TensorBoardLogger("logs", name="expert_thermo_eval")
 
     model.eval()
-    #trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
-    trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
+    trainer = Trainer(gpus=1, max_epochs=1, logger=logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, logger=logger)
     trainer.test(model=model)
 
 

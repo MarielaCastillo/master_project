@@ -44,13 +44,13 @@ def main():
 
     logger = TensorBoardLogger("logs", name="full")
     
-    wandb_logger = WandbLogger(project="wandb", log_model="all")
+    wandb_logger = WandbLogger(project="master_project3", log_model="all")
     # wandb_logger.log_hyperparams({})
 
-    #trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
-    trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=wandb_logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
+    # trainer = Trainer(accelerator="cpu", max_epochs=1, callbacks=[checkpoint_callback], logger=wandb_logger)
     # trainer = Trainer(gpus=1, max_epochs=1, callbacks=[checkpoint_callback], logger=logger)
-    # trainer = Trainer(gpus=1, max_epochs=1, callbacks=[checkpoint_callback], logger=wandb_logger)
+    trainer = Trainer(gpus=1, max_epochs=1, callbacks=[checkpoint_callback], logger=wandb_logger)
 
     model = LitModelEfficientNetFull(1, transform_rgb=transform_rgb, transform_thermo=transform_thermo,
                                      model1=expert_rgb, model2=expert_thermo)

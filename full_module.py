@@ -11,6 +11,7 @@ from segmentation_models_pytorch.base.heads import SegmentationHead
 
 # from expert_rgb_module import MultiModalDataset
 from expert_rgb_module import MultiModalDataset2
+from xml_to_cv2Umat import tensor_to_image
 
 from matplotlib.colors import ListedColormap
 
@@ -68,6 +69,8 @@ class LitModelEfficientNetFull(pl.LightningModule):
             input_gating.append(torch.cat([hidden_state_rgb, hidden_state_depth], dim=1))
         gating = self.decoder(*input_gating)
         gating = self.head(gating)
+
+
         outfinal = gating[:, 0] * outrgb + gating[:, 1] * outdepth
 
         boolean_tensor = gating[:,0] < gating[:,1]
@@ -86,7 +89,8 @@ class LitModelEfficientNetFull(pl.LightningModule):
         percentage_rgb = int(rgb_better)/total_elements * 100
         percentage_thermo= int(thermo_better)/total_elements * 100
 
-        return outfinal, percentage_rgb, percentage_thermo, gating
+        # return outfinal, percentage_rgb, percentage_thermo, gating, (gating[:, 0] * outrgb), (gating[:, 1] * outdepth)
+        return outfinal, percentage_rgb, percentage_thermo
 
         # contador rgb, contador thermo y %
         # guardar un ejemplo donde ganoo rgb y otra de thermo
@@ -109,8 +113,10 @@ class LitModelEfficientNetFull(pl.LightningModule):
     def test_dataloader(self):
         dir_path3 = dir_path + '/' + 'align'
         
-        testset = MultiModalDataset2(txt_file=dir_path3 + '/' + 'align_validation.txt',
+        testset = MultiModalDataset2(
+            #txt_file=dir_path3 + '/' + 'align_validation.txt',
                                         # txt_file=dir_path3 + '/' + 'align_validation2.txt', # <--- THIS #asdf
+                                        txt_file=dir_path + '/' + 'align2' + '/' + 'align_validation.txt',
                                      #file_path=dir_path3 + '/' + 'AnnotatedImages',
                                      file_path=dir_path3 + '/' + 'JPEGImages',
                                      label_path=dir_path + '/' + 'labels_npy_val',
@@ -131,7 +137,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         input_rgb, input_thermo, labels, file_name = train_batch
         labels = labels.long()
 
-        outputs, perc_rgb, perc_thermo, gating = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo = self(input_rgb, input_thermo)
 
         if viz_pred:
             label_dict = {0: 'unlabelled',
@@ -176,7 +182,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         loss = self.criterion(outputs, labels)
 
         # IoU
-        jaccard = JaccardIndex(num_classes=5).to(device)
+        jaccard = JaccardIndex(num_classes=5, average=None).to(device)
         iou = jaccard(outputs, labels)
 
         # Recall = TP/(TP+FN)
@@ -225,7 +231,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
         input_rgb, input_thermo, labels, file_name = test_batch
         labels = labels.long()
 
-        outputs, perc_rgb, perc_thermo, gating = self(input_rgb, input_thermo)
+        outputs, perc_rgb, perc_thermo, gating, mult_gating_rgb, mult_gating_thermo = self(input_rgb, input_thermo)
         loss = self.criterion(outputs, labels)
 
         if viz_pred:
@@ -251,7 +257,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
             # Labels
             lbl = labels.detach().cpu().numpy()  # detach es para graficar y transformar a numpy
             # plt.imshow(lbl[0])
-            #plt.show()
+            plt.show()
 
             # Prediction
             pred = outputs.argmax(axis=1).detach().cpu().numpy()
@@ -261,7 +267,7 @@ class LitModelEfficientNetFull(pl.LightningModule):
             gate_thermo = gating[:,1].detach().cpu().numpy()
 
             plt.imshow(lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
-            #plt.show()
+            plt.show()
             plt.imshow(pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             #plt.show()
             
@@ -270,12 +276,103 @@ class LitModelEfficientNetFull(pl.LightningModule):
             plt.imshow(gate_thermo[0]) # , cmap=colourmap, vmin=imin, vmax=imax)
             #plt.show()
 
+            imin1=mult_gating_thermo[0,:].min()
+            imax1=mult_gating_thermo[0,:].max()
+
+            imin2=mult_gating_thermo[0,:].min()
+            imax2=mult_gating_thermo[0,:].max()
+
+            # #### RGB
+            gating = mult_gating_rgb[0,0].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin1, vmax=imax1)
+            #plt.show()
+
+            gating = mult_gating_rgb[0,1].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin1, vmax=imax1)
+            #plt.show()
+
+            gating = mult_gating_rgb[0,2].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin1, vmax=imax1)
+            #plt.show()
+
+            gating = mult_gating_rgb[0,3].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin1, vmax=imax1)
+            #plt.show()
+
+            gating = mult_gating_rgb[0,4].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin1, vmax=imax1)
+            #plt.show()
+
+            gating_rgb = mult_gating_rgb[0].argmax(axis=0).detach().cpu().numpy()
+            plt.imshow(gating_rgb, cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.show()
+
+
+
+
+
+
+            
+
+            # #### THERMO
+            gating = mult_gating_thermo[0,0].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin2, vmax=imax2)
+            #plt.show()
+
+            gating = mult_gating_thermo[0,1].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin2, vmax=imax2)
+            #plt.show()
+
+            gating = mult_gating_thermo[0,2].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin2, vmax=imax2)
+            #plt.show()
+
+            gating = mult_gating_thermo[0,3].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin2, vmax=imax2)
+            #plt.show()
+
+            gating = mult_gating_thermo[0,4].detach().cpu().numpy()
+            plt.imshow(gating, cmap='gray', vmin=imin2, vmax=imax2)
+            #plt.show()
+
+            gating_thermo = mult_gating_thermo[0].argmax(axis=0).detach().cpu().numpy()
+            plt.imshow(gating_thermo, cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.show()
+
             # plt.imsave("eval_full/"+file_name[0]+"_eval_label.png", lbl[0])
             # plt.imsave("eval_full/"+file_name[0]+"_eval_pred_full.png", pred[0])
             
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
-            plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_label.png", lbl[0], cmap=colourmap, vmin=imin, vmax=imax)
+            #plt.imsave("./img_eval_full/"+self.checkpoint_epochs+"_"+file_name[0]+"_eval_pred_full.png", pred[0], cmap=colourmap, vmin=imin, vmax=imax)
             
+            confidence_rgb_idx = mult_gating_rgb[0].max(axis=0).indices
+            confidence_thermo_idx = mult_gating_thermo[0].max(axis=0).indices
+            confidence_rgb = mult_gating_rgb[0].max(axis=0).values
+            confidence_thermo = mult_gating_thermo[0].max(axis=0).values
+
+            tensor = torch.zeros(512,640)
+            for i in range(0, 511):
+                for j in range(0, 639):
+                    if confidence_rgb_idx[i,j] != 0 and confidence_thermo_idx[i,j] != 0:
+                        if confidence_rgb[i,j] > confidence_thermo[i,j]:
+                            tensor[i,j] = 1
+                        elif confidence_rgb[i,j] <= confidence_thermo[i,j]:
+                            tensor[i,j] = 2
+
+            color_dict2 = {0: 'black',
+                        1: 'red',
+                        2: 'purple'
+                        }
+
+            colourmap2 = ListedColormap(color_dict2.values())
+            
+            plt.imshow(tensor, cmap=colourmap2, vmin=0, vmax=3)
+            plt.show()
+                    
+            
+            #new_tensor = torch.transpose(new_tensor, 0,1)
+            image = tensor_to_image(tensor)
+            image.save("./hola/"+file_name[0]+".png")
             
             viz_pred = False
 
@@ -286,7 +383,10 @@ class LitModelEfficientNetFull(pl.LightningModule):
         
         # IoU
         jaccard = JaccardIndex(num_classes=5).to(device)
+        jaccardperclass = JaccardIndex(num_classes=5, average=None).to(device)
         iou = jaccard(outputs, labels)
+        iouperclass = jaccardperclass(outputs, labels)
+        
 
         # Recall = TP/(TP+FN)
         metric1 = Recall(num_classes=5, mdmc_average="samplewise")
@@ -317,8 +417,11 @@ class LitModelEfficientNetFull(pl.LightningModule):
         #wb_imgs.append(lbl[0])
 
 
-        metrics = {"global_step":self.trainer.global_step, "current_epoch":self.trainer.current_epoch,
-                    "test/test_acc":acc, "test/train_loss":loss,  "test/iou":iou,
+
+        
+        metrics = {"test_step":self.test_step,
+                    "test/test_acc":acc, "test/test_loss":loss.item(),  "test/iou":iou,
+                                                        "test/iouperclass":
                                                         "test/recall": recall,
                                                         "test/precision":precision,
                                                         "test/count_rgb":self.count_rgb, 
@@ -327,8 +430,9 @@ class LitModelEfficientNetFull(pl.LightningModule):
                                                         }
 
         for elem in metrics:
-            self.logger.experiment.define_metric(elem, step_metric="global_step")
+            self.logger.experiment.define_metric(elem, step_metric="test_step")
         self.logger.experiment.log(metrics)
+        
 
 
         return loss
