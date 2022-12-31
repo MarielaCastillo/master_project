@@ -131,3 +131,26 @@ lightning_logs/
 data/
 outputs/
 .vscode/launch.json
+*.png
+
+# Folders
+multimodalfolder/
+thermaldatasetfolder/
+checkpoints_rgb/
+checkpoints_thermo/
+checkpoints_full/
+align/
+labels_ss/
+labels_ss2/
+labels_npy/
+labels_npy_val/
+tb_logs/
+logs/
+align2/
+*with_squares/
+img*/
+wandb/
+checkpoints_end2end/
+
+
+
